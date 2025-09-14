@@ -1,0 +1,21 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+    background: url("../images/background_mobile2.png") no-repeat center center;
+    background-size: cover;
+    height: 100vh;
+    overflow: hidden;
+}
+
+@media (min-width: 1200px) {
+    body {
+        background: url("../images/background.png") no-repeat center center;
+            background-size: cover;
+            height: 100vh;
+            overflow: hidden;
+    }
+}

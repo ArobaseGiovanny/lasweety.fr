@@ -1,0 +1,26 @@
+.navbar {
+    font-family: "Cherry Bomb One", system-ui;
+    height: 75px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0px 15px;
+
+    &__title {
+        font-size: 1.5em;
+        letter-spacing: 2px;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+    }
+
+    &__icon-menu {
+        display: flex;
+        justify-items: center;
+        align-items: center;
+
+        & svg {
+            font-size: 2em;
+            color: white;
+        }
+    }
+}
