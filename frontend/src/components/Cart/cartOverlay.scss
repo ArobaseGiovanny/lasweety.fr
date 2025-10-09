@@ -1,0 +1,225 @@
+@use "../../styles/variables" as *;
+
+$cart-default-color: #0095ff;
+
+.cartOverlay {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: calc(100% - 70px);
+  background-color: white;
+  position: fixed;
+  bottom: 0;
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  padding: 0 20px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.4s ease-in-out;
+
+  &__empty-cart {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin-top: 20px;
+  }
+
+  &.isOpen {
+    transform: translateY(0%) !important;
+  }
+
+  &__close {
+    display: none;
+    position: sticky;
+    width: 100%;
+    text-align: right;
+    top: 20px;
+    font-size: 3em;
+    color: $cart-default-color;
+
+    & svg {
+      cursor: pointer;
+    }
+  }
+
+  &__scroll-hint {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: white;
+    display: flex;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+
+    & span {
+      display: block;
+      width: 40px;
+      height: 6px;
+      background-color: grey;
+      border-radius: 16px;
+    }
+  }
+
+  &__title {
+    text-align: center;
+    font-family: "Cherry Bomb One", system-ui;
+    font-size: 2em;
+    margin-top: 10px;
+    color: $cart-default-color;
+  }
+
+  &__list {
+    width: 100%;
+    margin-top: 20px;
+    list-style: none;
+    padding: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid #c8c8c8;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+  }
+
+  &__img {
+    width: 60px;
+    height: auto;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 8px;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+
+    & h3 {
+      font-size: 1.1em;
+      margin: 0;
+    }
+
+    & p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #555;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    & button {
+      border: none;
+      background-color: $cart-default-color;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 1.2em;
+      color: white;
+      cursor: pointer;
+    }
+
+    & span {
+      font-size: 1.1em;
+      font-weight: bold;
+      padding: 0 5px;
+    }
+  }
+
+  &__subtotal {
+    font-weight: bold;
+    font-size: 1.4em;
+    white-space: nowrap;
+  }
+
+  &__remove {
+    background: none;
+    border: none;
+    color: #d9534f;
+    cursor: pointer;
+    font-size: 0.9em;
+    align-self: center;
+    margin-top: 5px;
+  }
+
+  &__footer {
+    position: sticky;
+    bottom: 0;
+    background-color: white;
+    padding: 15px 0;
+    margin-top: auto;
+    text-align: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+
+    & p {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+  }
+
+  &__checkout {
+    cursor: pointer;
+    font-family: system-ui, sans-serif;
+    background-color: $cart-default-color;
+    border: none;
+    color: white;
+    font-size: 1.3em;
+    font-weight: bold;
+    width: 100%;
+    padding: 15px 0;
+    border-radius: 25px;
+  }
+}
+
+@media (min-width: 500px) {
+  .cartOverlay {
+    bottom: 0;
+    border-radius: 0;
+    top: 0;
+    left: 0;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    max-height: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease-in-out;
+
+    &.isOpen {
+      transform: translateX(0%) !important;
+    }
+
+    &__scroll-hint {
+      display: none;
+    }
+
+    &__close {
+      display: block;
+    }
+  }
+}
+
+@media (max-width: 330px) {
+  .cartOverlay {
+    &__header {
+      flex-direction: column;
+    }
+  }
+}

@@ -1,0 +1,105 @@
+.navbar {
+  font-family: "Cherry Bomb One", system-ui;
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 15px;
+  background-color: white;
+
+  &__logo {
+    height: 50px;
+
+    &-link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  // icon-cart & icon-menu
+  &__actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    height: 100%;
+  }
+
+  &__menu-cart {
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+    text-align: left;
+    width: 100%;
+    padding: 12px 35px;
+  }
+
+  &__icon-cart {
+    cursor: pointer;
+    font-size: 1.9em;
+    height: 100%;
+  }
+
+  &__icon-menu {
+    cursor: pointer;
+    font-size: 1.9em;
+    height: 100%;
+  }
+
+  &__cart-badge {
+    position: absolute;
+    top: 6px;
+    right: 60px;
+    background-color: red;
+    color: white;
+    font-size: 0.75em;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 2px 6px;
+    min-width: 18px;
+    text-align: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+  }
+
+  // menu déroulant
+  &__menu {
+    display: none;
+    position: absolute;
+    top: 59px;
+    right: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+    background-color: white;
+    z-index: 200;
+    font-size: 1.2em;
+    border-bottom-left-radius: 20px;
+    &--open {
+      display: block;
+    }
+
+    & ul {
+      list-style: none;
+    }
+
+    & a {
+      display: block;
+      width: 100%;
+      padding: 12px 35px;
+      text-decoration: none;
+      color: black;
+    }
+  }
+}
+
+.navbar__cart-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
