@@ -21,6 +21,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// ✅ Catch-all OPTIONS sans chemin (OK Express 5)
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
