@@ -3,6 +3,7 @@ import { useCart } from "../../context/CartContext";
 import products from "../../data/products";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function CartOverlay({ isOpen, onClose }) {
   const { cart, totalPrice, removeFromCart, updateQuantity } = useCart();
@@ -35,7 +36,7 @@ function CartOverlay({ isOpen, onClose }) {
   const handleCheckout = async () => {
     try {
       const response = await fetch(
-        "http://localhost:4242/api/checkout/create-session",
+        `${import.meta.env.VITE_API_URL}/checkout`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

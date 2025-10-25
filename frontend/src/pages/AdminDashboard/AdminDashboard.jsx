@@ -1,6 +1,8 @@
 
 import "./adminDashboard.scss"
 import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 function AdminDashboard() {
   const [orders, setOrders] = useState([]);
@@ -10,10 +12,10 @@ function AdminDashboard() {
 const fetchOrders = async () => {
   try {
     const token = localStorage.getItem("adminToken"); // récupère le vrai token
-    const res = await fetch("http://localhost:4242/api/admin/orders", {
+    const res = await fetch(`${API_URL}/admin/orders`, {
       headers: {
         "Content-Type": "application/json",
-        "x-admin-token": token, // envoie le bon token
+        "x-admin-token": token,
       },
     });
     const data = await res.json();
@@ -29,7 +31,7 @@ const fetchOrders = async () => {
 const updateStatus = async (id, newStatus) => {
   try {
     const token = localStorage.getItem("adminToken"); // idem ici
-    const res = await fetch(`http://localhost:4242/api/admin/orders/${id}`, {
+    const res = await fetch(`${API_URL}/admin/orders/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
