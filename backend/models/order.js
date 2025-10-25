@@ -58,4 +58,4 @@ orderSchema.pre("save", function (next) {
 orderSchema.index({ status: 1, createdAt: -1 }); // pour les vues back-office
 orderSchema.index({ customerEmail: 1, createdAt: -1 });
 
-export default mongoose.model("Order", orderSchema);
+export default mongoose.model("order", orderSchema);
