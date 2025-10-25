@@ -2,6 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../../../context/CartContext";
 import "./successPage.scss";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function SuccessPage() {
   const { clearCart } = useCart();
@@ -19,7 +20,7 @@ function SuccessPage() {
     const fetchOrder = async () => {
       try {
         const res = await fetch(
-          `http://localhost:4242/api/checkout/order/${sessionId}`
+          `${API_URL}/checkout/order/${sessionId}`
         );
         if (!res.ok) throw new Error("Erreur lors de la récupération de la commande");
         const data = await res.json();
