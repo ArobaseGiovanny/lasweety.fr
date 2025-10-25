@@ -4,6 +4,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 import adminRoutes from "./routes/admin.js";
 import checkoutRoutes from "./routes/checkout.js";
+import testMailRouter from "./routes/testMail.js";
+
 
 dotenv.config();
 
@@ -22,11 +24,14 @@ app.use((req, res, next) => {
 // Routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
+app.use("/api", testMailRouter);
+
+
 
 // Connexion MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connecté"))
   .catch((err) => console.error("❌ Erreur MongoDB:", err));
 
-const PORT = process.env.PORT || 4242;
+const PORT = 4242;
 app.listen(PORT, () => console.log(`🚀 Serveur backend sur port ${PORT}`));

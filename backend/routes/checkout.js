@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import Order from "../models/Order.js";
 import products from "../data/product.js";
 import Product from "../models/product.js";
+import { sendMail } from "../services/mailer.js";
+import { orderConfirmationTemplate } from "../services/orderConfirmation.js";
 
 dotenv.config();
 
@@ -32,6 +34,14 @@ router.post("/create-session", async (req, res) => {
       }
 
       const quantity = Math.max(1, item.quantity || 1);
+
+      // 🟢 Vérifie le stock actuel en base AVANT de créer la session Stripe
+      const dbProd = await Product.findOne({ id: item.id }).lean();
+      if (!dbProd || dbProd.stock < quantity) {
+        return res
+          .status(400)
+          .json({ error: `Stock insuffisant pour ${product.name}` });
+      }
 
       line_items.push({
         price_data: {
@@ -112,87 +122,118 @@ router.post(
     }
 
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+      const sessionObj = event.data.object;
 
-      // ⚡ Anti-doublons
-      const exists = await Order.findOne({ stripeSessionId: session.id });
+      // 🛡️ Anti-doublons durs : si commande déjà là -> on sort
+      const exists = await Order.findOne({ stripeSessionId: sessionObj.id });
       if (exists) {
-        console.warn("⚠️ Webhook ignoré : commande déjà enregistrée", session.id);
+        console.warn("⚠️ Webhook ignoré : commande déjà enregistrée", sessionObj.id);
         return res.json({ received: true });
       }
 
       const orderNumber = `#SWEETY-${Math.floor(10000 + Math.random() * 90000)}`;
 
+      // 🔎 Reconstruire le panier depuis metadata
+      let rawCart = [];
       let validatedProducts = [];
       let recalculatedTotal = 0;
-      let rawCart = []; // ✅ défini ici pour être utilisé partout
 
       try {
-        rawCart = JSON.parse(session.metadata.cart || "[]");
-
+        rawCart = JSON.parse(sessionObj.metadata?.cart || "[]");
         validatedProducts = rawCart
           .map((item) => {
-            const product = products[item.id];
-            if (!product) return null;
-
-            const quantity = Math.max(1, item.quantity || 1);
-            recalculatedTotal += product.price * quantity;
-
-            return {
-              id: item.id,
-              name: product.name,
-              price: product.price,
-              quantity,
-            };
+            const p = products[item.id];
+            if (!p) return null;
+            const qty = Math.max(1, item.quantity || 1);
+            recalculatedTotal += p.price * qty;
+            return { id: item.id, name: p.name, price: p.price, quantity: qty };
           })
           .filter(Boolean);
       } catch (e) {
         console.error("❌ Impossible de parser le panier :", e.message);
       }
 
-      // ⚡ Vérification du total
-      const stripeTotal = session.amount_total ? session.amount_total / 100 : 0;
+      // 🧮 Vérif total vs Stripe (log)
+      const stripeTotal = sessionObj.amount_total ? sessionObj.amount_total / 100 : 0;
       if (Math.abs(recalculatedTotal - stripeTotal) > 0.01) {
-        console.error(
-          `❌ Total incohérent ! Stripe: ${stripeTotal}, recalculé: ${recalculatedTotal}`
-        );
+        console.error(`❌ Total incohérent ! Stripe: ${stripeTotal}, recalculé: ${recalculatedTotal}`);
       }
 
-      const orderData = {
-        orderNumber,
-        products: validatedProducts,
-        total: stripeTotal,
-        customerEmail: session.customer_details?.email || "unknown",
-        customerName: session.customer_details?.name || "unknown",
-        shippingAddress: session.shipping_details?.address || {},
-        billingAddress: session.customer_details?.address || {},
-        status: "pending",
-        stripeSessionId: session.id,
-      };
-
-      // ✅ décrémentation du stock
-      for (const item of rawCart) {
-        const product = await Product.findOne({ id: item.id });
-        if (product) {
-          if (product.stock < item.quantity) {
-            console.warn(`⚠️ Pas assez de stock pour ${product.name}`);
-            continue; // ou throw new Error pour bloquer la commande
-          }
-
-          product.stock -= item.quantity;
-          await product.save();
+      // 📉 Décrément stock ATOMIQUE (empêche double décrément et stock négatif)
+      for (const it of rawCart) {
+        const upd = await Product.updateOne(
+          { id: it.id, stock: { $gte: it.quantity } },   // condition
+          { $inc: { stock: -it.quantity } }
+        );
+        if (upd.modifiedCount !== 1) {
+          console.error(`❌ Stock insuffisant post-paiement pour ${it.id}. À traiter manuellement.`);
+          // Optionnel: rembourser automatiquement si tu veux être ultra strict
+          // await stripe.refunds.create({ payment_intent: sessionObj.payment_intent, reason: "requested_by_customer" });
+          // return res.json({ received: true });
         }
       }
 
+      // 🧾 Préparer l'Order (on la marque directement "paid")
+      const orderData = {
+        orderNumber,
+        stripeSessionId: sessionObj.id,
+
+        products: validatedProducts,
+        total: stripeTotal,
+
+        customerEmail: sessionObj.customer_details?.email || "unknown",
+        customerName: sessionObj.customer_details?.name || "unknown",
+        shippingAddress: sessionObj.shipping_details?.address || {},
+        billingAddress: sessionObj.customer_details?.address || {},
+
+        status: "paid",
+
+        // champs idempotence email : doivent exister dans le schema
+        emailSent: false,
+        emailAttempts: 0,
+        emailSentAt: null,
+      };
+
+      let created;
       try {
-        await Order.create(orderData);
+        created = await Order.create(orderData);
         console.log("✅ Commande enregistrée:", orderNumber, orderData.customerEmail);
       } catch (err) {
         console.error("❌ Erreur MongoDB :", err.message);
+        return res.json({ received: true });
       }
+
+      // 📧 Envoi email IDEMPOTENT
+      try {
+        // On "claim" l'envoi en une seule opération atomique
+        const claim = await Order.updateOne(
+          { _id: created._id, emailSent: false },
+          { $set: { emailSent: true, emailSentAt: new Date() }, $inc: { emailAttempts: 1 } }
+        );
+
+        if (claim.modifiedCount === 1) {
+          const freshOrder = await Order.findById(created._id).lean();
+          const html = orderConfirmationTemplate(freshOrder);
+          await sendMail({
+            to: freshOrder.customerEmail,
+            subject: `Confirmation de commande ${freshOrder.orderNumber}`,
+            html,
+          });
+          console.log("📧 Email confirmation envoyé à", freshOrder.customerEmail);
+        } else {
+          console.log("📧 Email déjà envoyé / déjà claimé (idempotent).");
+        }
+      } catch (e) {
+        console.error("❌ Envoi e-mail échoué:", e.message);
+        // On peut remettre le flag pour retenter via un job/cron plus tard
+        await Order.updateOne({ _id: created._id }, { $set: { emailSent: false } });
+      }
+
+      return res.json({ received: true });
     }
 
-    res.json({ received: true });
+    // Autres events ignorés proprement
+    return res.json({ received: true });
   }
 );
 
