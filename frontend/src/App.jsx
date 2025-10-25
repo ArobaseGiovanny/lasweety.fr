@@ -15,7 +15,7 @@ function App() {
   );
 
   return (
-    <Router basename="/lasweety.fr/">
+    <Router basename="/">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
       <CartOverlay isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
