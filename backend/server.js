@@ -10,6 +10,7 @@ dotenv.config();
 
 const app = express();
 
+// --- CORS ---
 const corsOptions = {
   origin: ["https://lasweety.com", "https://www.lasweety.com"],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -19,21 +20,23 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
-app.options("/*", cors(corsOptions));
 
 app.use((req, res, next) => {
-  if (req.originalUrl === "/api/checkout/webhook") return next();
-  return express.json()(req, res, next);
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
 });
 
-// Routes
+app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
+app.use(express.json());
+
+// --- Routes ---
 app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api", testMailRouter);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Mongo
+// --- Mongo ---
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connecté"))
