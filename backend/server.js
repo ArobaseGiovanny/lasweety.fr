@@ -10,44 +10,34 @@ dotenv.config();
 
 const app = express();
 
-/** ---------- CORS uniquement pour /api (pas pour le webhook) ---------- */
-const allowedOrigins = ["https://lasweety.com", "https://www.lasweety.com"];
-
-const corsOptions = {
-  origin(origin, cb) {
-    // autoriser aussi les requêtes serveur-à-serveur sans header Origin
-    if (!origin) return cb(null, true);
-    return allowedOrigins.includes(origin)
-      ? cb(null, true)
-      : cb(new Error("Not allowed by CORS"));
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+// --- CORS ---
+// const corsOptions = {
+  //origin: ["https://lasweety.com", "https://www.lasweety.com"],
+  //methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  ////allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-  maxAge: 86400,
-};
+  //maxAge: 86400,
+  //optionsSuccessStatus: 204,
+//};
+//app.use(cors(corsOptions));
 
-app.use((req, res, next) => {
-  res.setHeader("Vary", "Origin");
-  next();
-});
+// ✅ Catch-all OPTIONS sans chemin (OK Express 5)
+//app.use((req, res, next) => {
+  //if (req.method === "OPTIONS") return res.sendStatus(204);
+  //next();
+//});
 
-app.use("/api", cors(corsOptions));
-
-/** ---------- Webhook Stripe (raw body) ---------- */
 app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
-
-/** ---------- JSON parser pour le reste ---------- */
 app.use(express.json());
 
-/** ---------- Routes ---------- */
+// --- Routes ---
 app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api", testMailRouter);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-/** ---------- Mongo ---------- */
+// --- Mongo ---
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connecté"))
