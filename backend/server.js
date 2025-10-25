@@ -26,7 +26,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api", testMailRouter);
 
-
+app.get('/health', (_req,res)=>res.json({ok:true}));
 
 // Connexion MongoDB
 mongoose.connect(process.env.MONGO_URI)
