@@ -13,8 +13,11 @@ const app = express();
 
 import cors from "cors";
 app.use(cors({
-  origin: "https://lasweety.com",
+  origin: ["https://lasweety.com", "https://www.lasweety.com"],
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"],
   credentials: true,
+  maxAge: 86400,
 }));
 
 
