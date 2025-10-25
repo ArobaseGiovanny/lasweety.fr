@@ -1,7 +1,7 @@
 import express from "express";
 import Stripe from "stripe";
 import dotenv from "dotenv";
-import Order from "../models/Order.js";
+import Order from "../models/order.js";
 import products from "../data/product.js";
 import Product from "../models/product.js";
 import { sendMail } from "../services/mailer.js";
