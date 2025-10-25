@@ -6,28 +6,24 @@ import adminRoutes from "./routes/admin.js";
 import checkoutRoutes from "./routes/checkout.js";
 import testMailRouter from "./routes/testMail.js";
 
-
 dotenv.config();
 
 const app = express();
 
-import cors from "cors";
-app.use(cors({
+const corsOptions = {
   origin: ["https://lasweety.com", "https://www.lasweety.com"],
-  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   maxAge: 86400,
-}));
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
-
-// ⚡ Middleware JSON sauf webhook
 app.use((req, res, next) => {
-  if (req.originalUrl === "/api/checkout/webhook") {
-    next();
-  } else {
-    express.json()(req, res, next);
-  }
+  if (req.originalUrl === "/api/checkout/webhook") return next();
+  return express.json()(req, res, next);
 });
 
 // Routes
@@ -35,10 +31,11 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api", testMailRouter);
 
-app.get('/health', (_req,res)=>res.json({ok:true}));
+app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Connexion MongoDB
-mongoose.connect(process.env.MONGO_URI)
+// Mongo
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connecté"))
   .catch((err) => console.error("❌ Erreur MongoDB:", err));
 
