@@ -36,7 +36,7 @@ function CartOverlay({ isOpen, onClose }) {
   const handleCheckout = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/checkout`,
+        `${import.meta.env.VITE_API_URL}/checkout/create-session`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
