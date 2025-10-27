@@ -6,7 +6,7 @@ import adminRoutes from "./routes/admin.js";
 import checkoutRoutes from "./routes/checkout.js";
 import testMailRouter from "./routes/testMail.js";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 
