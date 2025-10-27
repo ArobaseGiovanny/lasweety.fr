@@ -103,36 +103,23 @@ router.post("/create-session", async (req, res) => {
 /**
  * ➝ Webhook Stripe (paiement réussi)
  */
-router.post(
-  "/webhook",
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
+router.post("/webhook", async (req, res) => {
+  const sig = req.headers["stripe-signature"];
 
-    console.log(
-    "[WH] hit",
-    "sig:", req.get("stripe-signature") || null,
-    "ctype:", req.get("content-type") || null,
-    "isBuffer:", Buffer.isBuffer(req.body),
-    "len:", req.body ? req.body.length : null
-  );
+  try {
+    // Utiliser le corps BRUT (Buffer) converti en string
+    const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : req.body;
 
-    let event;
-    try {
-      console.log("Stripe-Signature header:", req.headers["stripe-signature"]);
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-    } catch (err) {
-      console.error("❌ Webhook error:", err.message);
-      return res.status(400).send(`Webhook error: ${err.message}`);
-    }
+    const event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
 
     if (event.type === "checkout.session.completed") {
       const sessionObj = event.data.object;
 
-      // 🛡️ Anti-doublons durs : si commande déjà là -> on sort
+      // Anti-doublons
       const exists = await Order.findOne({ stripeSessionId: sessionObj.id });
       if (exists) {
         console.warn("⚠️ Webhook ignoré : commande déjà enregistrée", sessionObj.id);
@@ -141,11 +128,10 @@ router.post(
 
       const orderNumber = `#SWEETY-${Math.floor(10000 + Math.random() * 90000)}`;
 
-      // 🔎 Reconstruire le panier depuis metadata
+      // Reconstruire panier depuis metadata
       let rawCart = [];
       let validatedProducts = [];
       let recalculatedTotal = 0;
-
       try {
         rawCart = JSON.parse(sessionObj.metadata?.cart || "[]");
         validatedProducts = rawCart
@@ -161,42 +147,33 @@ router.post(
         console.error("❌ Impossible de parser le panier :", e.message);
       }
 
-      // 🧮 Vérif total vs Stripe (log)
       const stripeTotal = sessionObj.amount_total ? sessionObj.amount_total / 100 : 0;
       if (Math.abs(recalculatedTotal - stripeTotal) > 0.01) {
         console.error(`❌ Total incohérent ! Stripe: ${stripeTotal}, recalculé: ${recalculatedTotal}`);
       }
 
-      // 📉 Décrément stock ATOMIQUE (empêche double décrément et stock négatif)
+      // Décrément stock atomique
       for (const it of rawCart) {
         const upd = await Product.updateOne(
-          { id: it.id, stock: { $gte: it.quantity } },   // condition
+          { id: it.id, stock: { $gte: it.quantity } },
           { $inc: { stock: -it.quantity } }
         );
         if (upd.modifiedCount !== 1) {
           console.error(`❌ Stock insuffisant post-paiement pour ${it.id}. À traiter manuellement.`);
-          // Optionnel: rembourser automatiquement si tu veux être ultra strict
-          // await stripe.refunds.create({ payment_intent: sessionObj.payment_intent, reason: "requested_by_customer" });
-          // return res.json({ received: true });
         }
       }
 
-      // 🧾 Préparer l'Order (on la marque directement "paid")
+      // Créer la commande
       const orderData = {
         orderNumber,
         stripeSessionId: sessionObj.id,
-
         products: validatedProducts,
         total: stripeTotal,
-
         customerEmail: sessionObj.customer_details?.email || "unknown",
         customerName: sessionObj.customer_details?.name || "unknown",
         shippingAddress: sessionObj.shipping_details?.address || {},
         billingAddress: sessionObj.customer_details?.address || {},
-
         status: "paid",
-
-        // champs idempotence email : doivent exister dans le schema
         emailSent: false,
         emailAttempts: 0,
         emailSentAt: null,
@@ -211,14 +188,12 @@ router.post(
         return res.json({ received: true });
       }
 
-      // 📧 Envoi email IDEMPOTENT
+      // Envoi email idempotent
       try {
-        // On "claim" l'envoi en une seule opération atomique
         const claim = await Order.updateOne(
           { _id: created._id, emailSent: false },
           { $set: { emailSent: true, emailSentAt: new Date() }, $inc: { emailAttempts: 1 } }
         );
-
         if (claim.modifiedCount === 1) {
           const freshOrder = await Order.findById(created._id).lean();
           const html = orderConfirmationTemplate(freshOrder);
@@ -233,17 +208,18 @@ router.post(
         }
       } catch (e) {
         console.error("❌ Envoi e-mail échoué:", e.message);
-        // On peut remettre le flag pour retenter via un job/cron plus tard
         await Order.updateOne({ _id: created._id }, { $set: { emailSent: false } });
       }
-
-      return res.json({ received: true });
     }
 
-    // Autres events ignorés proprement
+    // Toujours répondre 2xx rapidement à Stripe
     return res.json({ received: true });
+  } catch (err) {
+    console.error("❌ Webhook constructEvent error:", err.message);
+    return res.status(400).send(`Webhook error: ${err.message}`);
   }
-);
+});
+
 
 
 /**
