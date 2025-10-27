@@ -111,6 +111,7 @@ router.post(
 
     let event;
     try {
+      console.log("Stripe-Signature header:", req.headers["stripe-signature"]);
       event = stripe.webhooks.constructEvent(
         req.body,
         sig,
