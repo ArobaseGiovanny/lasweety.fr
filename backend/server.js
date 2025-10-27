@@ -10,22 +10,22 @@ dotenv.config();
 
 const app = express();
 
-// --- CORS ---
-// const corsOptions = {
-  //origin: ["https://lasweety.com", "https://www.lasweety.com"],
-  //methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  ////allowedHeaders: ["Content-Type", "Authorization"],
+ // --- CORS ---
+ const corsOptions = {
+  origin: ["https://lasweety.com", "https://www.lasweety.com"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-  //maxAge: 86400,
-  //optionsSuccessStatus: 204,
-//};
-//app.use(cors(corsOptions));
+  maxAge: 86400,
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
 
-// ✅ Catch-all OPTIONS sans chemin (OK Express 5)
-//app.use((req, res, next) => {
-  //if (req.method === "OPTIONS") return res.sendStatus(204);
-  //next();
-//});
+  // Catch-all OPTIONS sans chemin (OK Express 5)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
