@@ -7,8 +7,6 @@ import checkoutRoutes from "./routes/checkout.js";
 import testMailRouter from "./routes/testMail.js";
 
 dotenv.config({ override: true });
-console.log("Loaded STRIPE_WEBHOOK_SECRET:", process.env.STRIPE_WEBHOOK_SECRET);
-
 
 const app = express();
 
