@@ -12,7 +12,7 @@ const products = {
     id: 101,
     name: "Sweetyx Orange",
     color: "orange",
-    price: 29.99,
+    price: 34.99,
     description: "Un ourson orange qui fait fondre les cœurs 💙",
     icon: [{src: iconPelucheOrange}],
     images: [
@@ -23,7 +23,7 @@ const products = {
     id: 102,
     name: "Sweetyx Bleu",
     color: "bleu",
-    price: 29.99,
+    price: 34.99,
     description: "Un ourson bleu qui fait fondre les cœurs 💙",
     icon: [{src: iconPelucheBleu}],
     images: [
@@ -34,7 +34,7 @@ const products = {
     id: 103,
     name: "Sweetyx Rose",
     color: "rose",
-    price: 29.99,
+    price: 34.99,
     description: "Un ourson rose qui fait fondre les cœurs 💙",
     icon: [{src: iconPelucheRose}],
     images: [
@@ -45,7 +45,7 @@ const products = {
     id: 104,
     name: "Sweetyx Marron",
     color: "marron",
-    price: 29.99,
+    price: 34.99,
     description: "Un ourson marron qui fait fondre les cœurs 💙",
     icon: [{src: iconPelucheMarron}],
     images: [
