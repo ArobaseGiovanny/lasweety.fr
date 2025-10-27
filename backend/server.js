@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 
  // --- CORS ---
- 
+
 const whitelist = ["https://lasweety.com", "https://www.lasweety.com"];
 const corsOptions = {
   origin: (origin, cb) => {
@@ -28,7 +28,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 // important si tu veux que cors gère le préflight explicitement :
-app.options("*", cors(corsOptions)); // <-- préflight avec bons headers
+app.options(/.*/, cors(corsOptions)); // <-- préflight avec bons headers
 
 
 app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
