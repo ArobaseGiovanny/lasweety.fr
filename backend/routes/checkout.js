@@ -108,6 +108,14 @@ router.post(
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
 
+    console.log(
+    "[WH] hit",
+    "sig:", req.get("stripe-signature") || null,
+    "ctype:", req.get("content-type") || null,
+    "isBuffer:", Buffer.isBuffer(req.body),
+    "len:", req.body ? req.body.length : null
+  );
+
     let event;
     try {
       console.log("Stripe-Signature header:", req.headers["stripe-signature"]);
