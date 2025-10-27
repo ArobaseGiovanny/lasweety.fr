@@ -105,16 +105,15 @@ router.post("/create-session", async (req, res) => {
  */
 router.post("/webhook", async (req, res) => {
   const sig = req.headers["stripe-signature"];
+  const secret = process.env.STRIPE_WEBHOOK_SECRET || "";
+
+  console.log("[WH] hit webhook, sig:", sig ? "ok" : "absent");
+  console.log("[WH] secret(last6):", secret.slice(-6));
+  console.log("[WH] req.body isBuffer:", Buffer.isBuffer(req.body), "len:", req.body?.length);
 
   try {
-    // Utiliser le corps BRUT (Buffer) converti en string
-    const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : req.body;
-
-    const event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    // ⚠️ Stripe veut le corps BRUT (Buffer), pas stringifié
+    const event = stripe.webhooks.constructEvent(req.body, sig, secret);
 
     if (event.type === "checkout.session.completed") {
       const sessionObj = event.data.object;
@@ -212,13 +211,14 @@ router.post("/webhook", async (req, res) => {
       }
     }
 
-    // Toujours répondre 2xx rapidement à Stripe
+    // Toujours répondre à Stripe rapidement
     return res.json({ received: true });
   } catch (err) {
     console.error("❌ Webhook constructEvent error:", err.message);
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
 });
+
 
 
 
