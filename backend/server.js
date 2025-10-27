@@ -10,8 +10,7 @@ dotenv.config();
 
 const app = express();
 
-/* 1) Webhook Stripe : CORPS BRUT OBLIGATOIRE (avant tout le reste) */
-app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
+app.use("/api/checkout/webhook", express.raw({ type: "*/*" }));
 
 /* 2) JSON parser pour TOUT le reste (on saute le webhook) */
 app.use((req, res, next) => {
