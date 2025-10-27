@@ -9,6 +9,7 @@ import testMailRouter from "./routes/testMail.js";
 dotenv.config();
 
 const app = express();
+app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
 
  // --- CORS ---
 
@@ -30,8 +31,6 @@ app.use(cors(corsOptions));
 // important si tu veux que cors gère le préflight explicitement :
 app.options(/.*/, cors(corsOptions)); // <-- préflight avec bons headers
 
-
-app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
 
 // --- Routes ---
