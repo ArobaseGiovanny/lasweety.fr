@@ -9,7 +9,14 @@ import testMailRouter from "./routes/testMail.js";
 dotenv.config();
 
 const app = express();
+// 1) Webhook Stripe
 app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
+
+
+app.use((req, res, next) => {
+  if (req.originalUrl === "/api/checkout/webhook") return next();
+  return express.json()(req, res, next);
+});
 
  // --- CORS ---
 
@@ -30,8 +37,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 // important si tu veux que cors gère le préflight explicitement :
 app.options(/.*/, cors(corsOptions)); // <-- préflight avec bons headers
-
-app.use(express.json());
 
 // --- Routes ---
 app.use("/api/admin", adminRoutes);
