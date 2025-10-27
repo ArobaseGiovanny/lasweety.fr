@@ -11,21 +11,25 @@ dotenv.config();
 const app = express();
 
  // --- CORS ---
- const corsOptions = {
-  origin: ["https://lasweety.com", "https://www.lasweety.com"],
+ 
+const whitelist = ["https://lasweety.com", "https://www.lasweety.com"];
+const corsOptions = {
+  origin: (origin, cb) => {
+    // autorise aussi requêtes sans Origin (ex: health checks)
+    if (!origin) return cb(null, true);
+    if (whitelist.includes(origin)) return cb(null, true);
+    cb(new Error("Not allowed by CORS"));
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   maxAge: 86400,
-  optionsSuccessStatus: 204,
 };
-app.use(cors(corsOptions));
 
-  // Catch-all OPTIONS sans chemin (OK Express 5)
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
-});
+app.use(cors(corsOptions));
+// important si tu veux que cors gère le préflight explicitement :
+app.options("*", cors(corsOptions)); // <-- préflight avec bons headers
+
 
 app.use("/api/checkout/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
