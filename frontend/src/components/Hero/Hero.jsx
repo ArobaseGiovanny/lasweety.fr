@@ -32,7 +32,7 @@ function Hero({ onPelucheClick }) {
   return (
     <main className="hero" ref={scrollRef}>
         <div className="hero__text">
-            <span className="hero__text-choose">Choisis ton produit</span>
+            <span className="hero__text-choose">Choisis ta peluche</span>
             <span className="hero__text-choose">Sweetyx</span>
             <IoIosArrowDown />
         </div>
