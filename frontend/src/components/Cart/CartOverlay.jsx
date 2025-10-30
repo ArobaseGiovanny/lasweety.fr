@@ -80,7 +80,7 @@ function CartOverlay({ isOpen, onClose }) {
       const params = new URLSearchParams();
       if (searchZip) params.append("zip", searchZip);
       if (searchCity) params.append("city", searchCity);
-      const res = await fetch(`${API_URL}/api/chronopost/points?${params.toString()}`);
+      const res = await fetch(`${API_URL}/chronopost/points?${params.toString()}`);
       const json = await res.json();
       if (json?.points?.length) {
         setPoints(json.points);

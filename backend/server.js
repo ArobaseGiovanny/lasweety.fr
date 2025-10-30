@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import adminRoutes from "./routes/admin.js";
 import checkoutRoutes from "./routes/checkout.js";
 import testMailRouter from "./routes/testMail.js";
+import chronopostRouter from "./routes/chronopost.js";
 
 dotenv.config({ override: true });
 
@@ -42,6 +43,7 @@ app.options(/.*/, cors(corsOptions)); // préflight géré proprement
 app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api", testMailRouter);
+app.use("/api/chronopost", chronopostRouter);
 
 /* Health */
 app.get("/health", (_req, res) => res.json({ ok: true }));
