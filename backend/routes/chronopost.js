@@ -1,60 +1,58 @@
 // routes/chronopost.js
 import express from "express";
-import soap from "soap";
+
+// Node 18+ a déjà fetch. Si tu es en <18, décommente la ligne suivante :
+// import fetch from "node-fetch";
 
 const router = express.Router();
 
 // GET /api/chronopost/points?zip=75001&city=Paris
-// (ou) /api/chronopost/points?lat=48.8566&lng=2.3522
 router.get("/points", async (req, res) => {
-  const { zip, city, country = "FR", lat, lng } = req.query;
+  const { zip, city, country = "FR" } = req.query;
 
-  const WSDL = "https://ws.chronopost.fr/pointretrait-cxf/PointRelaisServiceWS?wsdl";
-
-  // Prépare les args (par code postal/ville OU par géoloc)
-  const common = {
-    accountNumber: process.env.CHRONO_ACCOUNT,
-    password: process.env.CHRONO_PASSWORD,
-    countryCode: country,
-    shippingDate: new Date().toISOString().slice(0, 10),
-    weight: 1,
-    maxPointChronopost: 20,
-    maxDistanceSearch: 10,
-    requestID: `REQ-${Date.now()}`
-  };
-
-  // Choix de la méthode et des paramètres
-  let methodName = "recherchePointChronopostInter";
-  let args = { ...common, zipCode: zip || "", city: city || "" };
-
-  // Si lat/lng fournis, on passe en recherche par géoloc
-  if (lat && lng) {
-    methodName = "recherchePointChronopostParCoord";
-    args = { ...common, coordGeoLatitude: String(lat), coordGeoLongitude: String(lng) };
-  } else if (!zip && !city) {
-    return res.status(400).json({ error: "Fournir zip/city ou lat/lng" });
+  if (!zip && !city) {
+    return res.status(400).json({ error: "Fournir zip ou city" });
   }
 
   try {
-    const client = await soap.createClientAsync(WSDL);
-    const [result] = await client[`${methodName}Async`](args);
-    const list = result?.return?.listePointRelais?.liste || [];
+    const params = new URLSearchParams({
+      country,
+      carrier: "chronopost",
+    });
+    if (zip) params.append("postal_code", zip);
+    if (city) params.append("city", city);
 
-    const points = list.map((p) => ({
-      id: p.identifiant,
-      name: p.nom,
-      address: [p.adresse1, p.adresse2].filter(Boolean).join(" "),
-      zip: p.codePostal,
-      city: p.localite,
-      lat: Number(p.coordGeolocalisation?.latitude) || null,
-      lng: Number(p.coordGeolocalisation?.longitude) || null,
-      schedule: p.informations?.horairesOuverture || []
+    const auth = Buffer
+      .from(`${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`)
+      .toString("base64");
+
+    const url = `https://panel.sendcloud.sc/api/v2/service-points?${params.toString()}`;
+    const resp = await fetch(url, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error("SendCloud error:", resp.status, text);
+      return res.status(502).json({ error: "SENDCLOUD_FAILED" });
+    }
+
+    const data = await resp.json();
+    const points = (data?.service_points || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      address: [p.street, p.house_number].filter(Boolean).join(" "),
+      zip: p.postal_code,
+      city: p.city,
+      lat: p.latitude,
+      lng: p.longitude,
+      carrier: p.carrier,
     }));
 
-    res.json({ points });
+    return res.json({ points });
   } catch (e) {
-    console.error("Chronopost SOAP error:", e?.message || e);
-    res.status(500).json({ error: "CHRONOPOINTS_FAILED" });
+    console.error("SendCloud request failed:", e?.message || e);
+    return res.status(500).json({ error: "SENDCLOUD_ERROR" });
   }
 });
 
