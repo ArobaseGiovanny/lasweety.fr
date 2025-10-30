@@ -2,26 +2,41 @@ import "../Cart/cartOverlay.scss";
 import { useCart } from "../../context/CartContext";
 import products from "../../data/products";
 import { IoCloseCircleSharp } from "react-icons/io5";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
 const API_URL = import.meta.env.VITE_API_URL;
+
+// Charge le script Sendcloud si besoin (si tu n'as pas mis la balise <script> dans index.html)
+function ensureSPPScript() {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== "undefined" && window.sendcloud?.servicePoints) {
+      return resolve();
+    }
+    const existing = document.querySelector('script[src*="servicepoints.sendcloud.sc/js/servicepoints.min.js"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", reject);
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://servicepoints.sendcloud.sc/js/servicepoints.min.js";
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Failed to load Sendcloud Service Points script"));
+    document.head.appendChild(s);
+  });
+}
 
 function CartOverlay({ isOpen, onClose }) {
   const { cart, totalPrice, removeFromCart, updateQuantity } = useCart();
   const [startY, setStartY] = useState(null);
   const [translateY, setTranslateY] = useState(0);
 
-  // États flux commande
   const [showDeliveryChoice, setShowDeliveryChoice] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [deliveryMode, setDeliveryMode] = useState(null); // "home" | "pickup"
-  const [pickupPoint, setPickupPoint] = useState(null);   // { id, name, address, zip, city }
-
-  // Popup 2 : sélection relais (liste)
-  const [showPickupList, setShowPickupList] = useState(false);
-  const [searchZip, setSearchZip] = useState("");
-  const [searchCity, setSearchCity] = useState("");
-  const [loadingPoints, setLoadingPoints] = useState(false);
-  const [points, setPoints] = useState([]);
-  const [errorPoints, setErrorPoints] = useState("");
+  // eslint-disable-next-line no-unused-vars
+  const [pickupPoint, setPickupPoint] = useState(null);   // { id, name, address, zip, city, ... }
 
   // Swipe mobile
   const handleTouchStart = (e) => setStartY(e.touches[0].clientY);
@@ -48,8 +63,8 @@ function CartOverlay({ isOpen, onClose }) {
             id: item.id,
             quantity: item.quantity,
           })),
-          deliveryMode: mode,
-          pickupPoint: point, // null si domicile
+          deliveryMode: mode,   // "home" | "pickup"
+          pickupPoint: point,   // null si domicile, objet si relais
         }),
       });
 
@@ -64,42 +79,42 @@ function CartOverlay({ isOpen, onClose }) {
     }
   };
 
-  // Clic “Passer la commande” → ouvrir popup 1
+  // Clic “Passer la commande” → ouvrir le choix
   const handleOrderClick = () => setShowDeliveryChoice(true);
 
-  // Charger points relais (liste)
-  const fetchPoints = async () => {
-    if (!searchZip && !searchCity) {
-      setErrorPoints("Renseigne un code postal ou une ville.");
-      return;
-    }
-    setErrorPoints("");
-    setLoadingPoints(true);
-    setPoints([]);
+  // Ouvre le picker Sendcloud et enchaîne
+  const openSendcloudPicker = async () => {
     try {
-      const params = new URLSearchParams();
-      if (searchZip) params.append("zip", searchZip);
-      if (searchCity) params.append("city", searchCity);
-      const res = await fetch(`${API_URL}/chronopost/points?${params.toString()}`);
-      const json = await res.json();
-      if (json?.points?.length) {
-        setPoints(json.points);
-      } else {
-        setPoints([]);
-        setErrorPoints("Aucun point relais trouvé avec ces critères.");
-      }
-    } catch (e) {
-      setErrorPoints("Impossible de charger les points relais.");
-    } finally {
-      setLoadingPoints(false);
-    }
-  };
+      await ensureSPPScript();
 
-  // Sélection d’un relais → checkout
-  const selectPickupAndCheckout = (p) => {
-    setPickupPoint(p);
-    setShowPickupList(false);
-    handleCheckout("pickup", p);
+      // Ouvre la carte officielle
+      window.sendcloud.servicePoints.open({
+        country: "FR",
+        carriers: ["chronopost"], // limite aux relais Chronopost
+        // Tu peux pré-remplir un code postal si tu l'as en front :
+        // postal_code: "27000",
+        onSelect: (point) => {
+          const p = {
+            id: point.id,
+            name: point.name,
+            address: [point.street, point.house_number].filter(Boolean).join(" "),
+            zip: point.postal_code,
+            city: point.city,
+            lat: Number(point.latitude),
+            lng: Number(point.longitude),
+            carrier: point.carrier,
+          };
+          setPickupPoint(p);
+          handleCheckout("pickup", p);
+        },
+        onClose: () => {
+          // Fermeture sans sélection, rien à faire
+        },
+      });
+    } catch (err) {
+      console.error("Impossible d’ouvrir le picker Sendcloud :", err);
+      alert("Impossible d’ouvrir la carte des points relais pour le moment. Réessaie plus tard.");
+    }
   };
 
   return (
@@ -183,7 +198,7 @@ function CartOverlay({ isOpen, onClose }) {
         )}
       </section>
 
-      {/* Popup 1 : choix du mode de livraison */}
+      {/* Popup centré : choix du mode de livraison */}
       {showDeliveryChoice && (
         <div
           className="deliveryModal"
@@ -241,11 +256,10 @@ function CartOverlay({ isOpen, onClose }) {
                   backgroundColor: "white",
                   cursor: "pointer",
                 }}
-                onClick={() => {
+                onClick={async () => {
                   setDeliveryMode("pickup");
                   setShowDeliveryChoice(false);
-                  // Ouvrir le 2e popup (liste relais)
-                  setShowPickupList(true);
+                  await openSendcloudPicker();
                 }}
               >
                 Point relais Chronopost
@@ -264,105 +278,6 @@ function CartOverlay({ isOpen, onClose }) {
             >
               Annuler
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Popup 2 : liste des points relais */}
-      {showPickupList && (
-        <div
-          className="pickupModal"
-          style={{
-            position: "fixed",
-            inset: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-          }}
-        >
-          <div
-            className="pickupModal__content"
-            style={{
-              background: "white",
-              padding: "1.5rem",
-              borderRadius: "12px",
-              width: "92%",
-              maxWidth: "520px",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3>Choisir un point relais</h3>
-              <button
-                style={{ border: "none", background: "transparent", fontSize: 16 }}
-                onClick={() => setShowPickupList(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <input
-                type="text"
-                placeholder="Code postal"
-                value={searchZip}
-                onChange={(e) => setSearchZip(e.target.value)}
-                style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd" }}
-              />
-              <input
-                type="text"
-                placeholder="Ville"
-                value={searchCity}
-                onChange={(e) => setSearchCity(e.target.value)}
-                style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd" }}
-              />
-              <button
-                onClick={fetchPoints}
-                style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: "#111", color: "#fff" }}
-              >
-                Rechercher
-              </button>
-            </div>
-
-            {loadingPoints && <p style={{ marginTop: 12 }}>Chargement des points relais…</p>}
-            {errorPoints && <p style={{ marginTop: 12, color: "crimson" }}>{errorPoints}</p>}
-
-            <div style={{ marginTop: 12, maxHeight: 320, overflow: "auto" }}>
-              {points.map((p) => (
-                <div
-                  key={p.id + p.address}
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: "10px 12px",
-                    marginBottom: 8,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ fontSize: 14 }}>
-                    <div style={{ fontWeight: 600 }}>{p.name}</div>
-                    <div>{p.address}</div>
-                    <div>{p.zip} {p.city}</div>
-                  </div>
-                  <button
-                    style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #111", background: "#fff", cursor: "pointer" }}
-                    onClick={() => selectPickupAndCheckout(p)}
-                  >
-                    Choisir
-                  </button>
-                </div>
-              ))}
-              {!loadingPoints && !errorPoints && points.length === 0 && (
-                <p style={{ color: "#666" }}>Aucun résultat pour l’instant. Lance une recherche.</p>
-              )}
-            </div>
           </div>
         </div>
       )}
