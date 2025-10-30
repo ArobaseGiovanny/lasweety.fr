@@ -5,24 +5,23 @@ import { IoCloseCircleSharp } from "react-icons/io5";
 import { useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const SENDCLOUD_PUBLIC_KEY = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
 
-// Charge le script Sendcloud si besoin (si tu n'as pas mis la balise <script> dans index.html)
+// Charge le script Sendcloud si non présent (fallback si tu n'as pas mis la balise dans index.html)
 function ensureSPPScript() {
   return new Promise((resolve, reject) => {
-    if (typeof window !== "undefined" && window.sendcloud?.servicePoints) {
-      return resolve();
-    }
-    const existing = document.querySelector('script[src*="servicepoints.sendcloud.sc/js/servicepoints.min.js"]');
+    if (typeof window !== "undefined" && window.sendcloud?.servicePoints) return resolve();
+    const existing = document.querySelector('script[src*="embed.sendcloud.sc/spp"]');
     if (existing) {
       existing.addEventListener("load", () => resolve());
       existing.addEventListener("error", reject);
       return;
     }
     const s = document.createElement("script");
-    s.src = "https://servicepoints.sendcloud.sc/js/servicepoints.min.js";
+    s.src = "https://embed.sendcloud.sc/spp/1.0.0/api.min.js";
     s.async = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Failed to load Sendcloud Service Points script"));
+    s.onerror = () => reject(new Error("Failed to load Sendcloud SPP"));
     document.head.appendChild(s);
   });
 }
@@ -52,68 +51,73 @@ function CartOverlay({ isOpen, onClose }) {
     setStartY(null);
   };
 
-  // Checkout Stripe
+  // Stripe checkout
   const handleCheckout = async (mode, point = null) => {
     try {
       const response = await fetch(`${API_URL}/checkout/create-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cart: cart.map((item) => ({
-            id: item.id,
-            quantity: item.quantity,
-          })),
-          deliveryMode: mode,   // "home" | "pickup"
-          pickupPoint: point,   // null si domicile, objet si relais
+          cart: cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+          deliveryMode: mode,
+          pickupPoint: point, // null si domicile
         }),
       });
-
       const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Pas d’URL Stripe dans la réponse :", data);
-      }
-    } catch (error) {
-      console.error("Erreur lors du checkout :", error);
+      if (data.url) window.location.href = data.url;
+      else console.error("Pas d’URL Stripe dans la réponse :", data);
+    } catch (err) {
+      console.error("Erreur lors du checkout :", err);
     }
   };
 
-  // Clic “Passer la commande” → ouvrir le choix
   const handleOrderClick = () => setShowDeliveryChoice(true);
 
-  // Ouvre le picker Sendcloud et enchaîne
+  // Ouvre la carte Sendcloud (Service Point Picker)
   const openSendcloudPicker = async () => {
     try {
       await ensureSPPScript();
+      if (!SENDCLOUD_PUBLIC_KEY) {
+        alert("Clé publique Sendcloud manquante (VITE_SENDCLOUD_PUBLIC_KEY).");
+        return;
+      }
 
-      // Ouvre la carte officielle
-      window.sendcloud.servicePoints.open({
-        country: "FR",
-        carriers: ["chronopost"], // limite aux relais Chronopost
-        // Tu peux pré-remplir un code postal si tu l'as en front :
-        // postal_code: "27000",
-        onSelect: (point) => {
+      // Doc officielle: nécessite apiKey, country, language; carriers peut filtrer. :contentReference[oaicite:2]{index=2}
+      window.sendcloud.servicePoints.open(
+        {
+          apiKey: SENDCLOUD_PUBLIC_KEY,
+          country: "FR",
+          language: "fr-fr",
+          carriers: ["chronopost"], // limite à Chronopost
+          // Optionnel:
+          // postalCode: "27000",
+          // city: "Evreux",
+        },
+        // onSelect (succès)
+        (point, postNumber) => {
           const p = {
-            id: point.id,
-            name: point.name,
-            address: [point.street, point.house_number].filter(Boolean).join(" "),
-            zip: point.postal_code,
-            city: point.city,
-            lat: Number(point.latitude),
-            lng: Number(point.longitude),
-            carrier: point.carrier,
+            id: point?.id,
+            name: point?.name,
+            address: [point?.street, point?.house_number].filter(Boolean).join(" "),
+            zip: point?.postal_code,
+            city: point?.city,
+            lat: Number(point?.latitude),
+            lng: Number(point?.longitude),
+            carrier: point?.carrier,
+            postNumber: postNumber || null, // si présent
           };
           setPickupPoint(p);
           handleCheckout("pickup", p);
         },
-        onClose: () => {
-          // Fermeture sans sélection, rien à faire
-        },
-      });
+        // onError
+        (error) => {
+          console.error("Sendcloud picker error:", error);
+          alert("Impossible d’ouvrir la carte des points relais. Réessaie plus tard.");
+        }
+      );
     } catch (err) {
-      console.error("Impossible d’ouvrir le picker Sendcloud :", err);
-      alert("Impossible d’ouvrir la carte des points relais pour le moment. Réessaie plus tard.");
+      console.error("Impossible de charger le script Sendcloud SPP :", err);
+      alert("Chargement du module points relais échoué.");
     }
   };
 
