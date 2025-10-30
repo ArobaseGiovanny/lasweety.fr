@@ -1,57 +1,73 @@
 // routes/chronopost.js
 import express from "express";
-
-// Node 18+ a déjà fetch. Si tu es en <18, décommente la ligne suivante :
-// import fetch from "node-fetch";
+// (si Node < 18): import fetch from "node-fetch";
 
 const router = express.Router();
 
 // GET /api/chronopost/points?zip=75001&city=Paris
 router.get("/points", async (req, res) => {
-  const { zip, city, country = "FR" } = req.query;
-
+  const { zip = "", city = "", country = "FR" } = req.query;
   if (!zip && !city) {
     return res.status(400).json({ error: "Fournir zip ou city" });
   }
 
+  // Compose un champ "address" robuste : "27000 Evreux"
+  const address = `${String(zip).trim()} ${String(city).trim()}`
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")   // enlève accents
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Rayon de recherche en mètres (ajuste si besoin : 3000-10000)
+  const params = new URLSearchParams({
+    country,
+    address: address || String(zip) || String(city),
+    radius: "8000",
+  });
+
   try {
-    const params = new URLSearchParams({
-      country,
-      carrier: "chronopost",
-    });
-    if (zip) params.append("postal_code", zip);
-    if (city) params.append("city", city);
+    const url = `https://servicepoints.sendcloud.sc/api/v2/service-points?${params.toString()}`;
 
-    const auth = Buffer
-      .from(`${process.env.SENDCLOUD_PUBLIC_KEY}:${process.env.SENDCLOUD_SECRET_KEY}`)
-      .toString("base64");
-
-    const url = `https://panel.sendcloud.sc/api/v2/service-points?${params.toString()}`;
-    const resp = await fetch(url, {
-      headers: { Authorization: `Basic ${auth}` },
-    });
+    // ⚠️ Cet endpoint est public d’après la doc — pas d’Authorization ici.
+    const resp = await fetch(url);
 
     if (!resp.ok) {
       const text = await resp.text();
-      console.error("SendCloud error:", resp.status, text);
-      return res.status(502).json({ error: "SENDCLOUD_FAILED" });
+      console.error("ServicePoints error:", resp.status, text);
+      return res.status(502).json({ error: "SENDCLOUD_FAILED", status: resp.status });
     }
 
     const data = await resp.json();
-    const points = (data?.service_points || []).map(p => ({
+    // On filtre côté code pour ne garder que Chronopost (si présent)
+    const raw = Array.isArray(data) ? data : (data?.service_points || data?.points || []);
+    const points = raw
+      .filter(p => (p.carrier || "").toLowerCase().includes("chrono")) // garde chronopost
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        address: [p.street, p.house_number].filter(Boolean).join(" "),
+        zip: p.postal_code,
+        city: p.city,
+        lat: Number(p.latitude),
+        lng: Number(p.longitude),
+        carrier: p.carrier,
+      }));
+
+    // Si rien côté Chronopost, renvoie tout (au cas où le codage carrier diffère)
+    const finalPoints = points.length ? points : raw.map(p => ({
       id: p.id,
       name: p.name,
       address: [p.street, p.house_number].filter(Boolean).join(" "),
       zip: p.postal_code,
       city: p.city,
-      lat: p.latitude,
-      lng: p.longitude,
+      lat: Number(p.latitude),
+      lng: Number(p.longitude),
       carrier: p.carrier,
     }));
 
-    return res.json({ points });
+    return res.json({ points: finalPoints });
   } catch (e) {
-    console.error("SendCloud request failed:", e?.message || e);
+    console.error("ServicePoints request failed:", e?.message || e);
     return res.status(500).json({ error: "SENDCLOUD_ERROR" });
   }
 });
