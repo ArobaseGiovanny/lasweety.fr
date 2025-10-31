@@ -357,9 +357,9 @@ function CartOverlay({ isOpen, onClose }) {
               textAlign: "center",
             }}
           >
-            <h3>Où souhaites-tu récupérer ton colis ?</h3>
+            <h3>Code postal</h3>
             <p style={{ marginTop: 6, color: "#666" }}>
-              Entre ton code postal pour centrer la carte, ou utilise ta position.
+              Entre ton code postal pour afficher la carte des points relais de ta ville
             </p>
 
             <input
