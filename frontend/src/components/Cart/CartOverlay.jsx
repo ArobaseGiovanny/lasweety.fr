@@ -37,6 +37,11 @@ function CartOverlay({ isOpen, onClose }) {
   // eslint-disable-next-line no-unused-vars
   const [pickupPoint, setPickupPoint] = useState(null);   // { id, name, address, zip, city, ... }
 
+  // NEW: pop-up code postal
+  const [showPostalModal, setShowPostalModal] = useState(false);
+  const [postalCode, setPostalCode] = useState("");
+  const [postalError, setPostalError] = useState("");
+
   // Swipe mobile
   const handleTouchStart = (e) => setStartY(e.touches[0].clientY);
   const handleTouchMove = (e) => {
@@ -73,8 +78,8 @@ function CartOverlay({ isOpen, onClose }) {
 
   const handleOrderClick = () => setShowDeliveryChoice(true);
 
-  // Ouvre la carte Sendcloud (Service Point Picker)
-  const openSendcloudPicker = async () => {
+  // Ouvre la carte Sendcloud (Service Point Picker) avec options
+  const openSendcloudPicker = async ({ postalCode, coords } = {}) => {
     try {
       await ensureSPPScript();
       if (!SENDCLOUD_PUBLIC_KEY) {
@@ -82,18 +87,23 @@ function CartOverlay({ isOpen, onClose }) {
         return;
       }
 
-      // Doc officielle: nécessite apiKey, country, language; carriers peut filtrer. :contentReference[oaicite:2]{index=2}
+      const baseOptions = {
+        apiKey: SENDCLOUD_PUBLIC_KEY,
+        country: "FR",
+        language: "fr-fr",
+        carriers: ["chronopost"], // limite à Chronopost
+      };
+
+      const opts = { ...baseOptions };
+      if (postalCode) opts.postalCode = String(postalCode).trim();
+      if (coords?.latitude && coords?.longitude) {
+        opts.latitude = Number(coords.latitude);
+        opts.longitude = Number(coords.longitude);
+      }
+
       window.sendcloud.servicePoints.open(
-        {
-          apiKey: SENDCLOUD_PUBLIC_KEY,
-          country: "FR",
-          language: "fr-fr",
-          carriers: ["chronopost"], // limite à Chronopost
-          // Optionnel:
-          // postalCode: "27000",
-          // city: "Evreux",
-        },
-        // onSelect (succès)
+        opts,
+        // onSelect
         (point, postNumber) => {
           const p = {
             id: point?.id,
@@ -104,7 +114,7 @@ function CartOverlay({ isOpen, onClose }) {
             lat: Number(point?.latitude),
             lng: Number(point?.longitude),
             carrier: point?.carrier,
-            postNumber: postNumber || null, // si présent
+            postNumber: postNumber || null,
           };
           setPickupPoint(p);
           handleCheckout("pickup", p);
@@ -119,6 +129,39 @@ function CartOverlay({ isOpen, onClose }) {
       console.error("Impossible de charger le script Sendcloud SPP :", err);
       alert("Chargement du module points relais échoué.");
     }
+  };
+
+  // Validation code postal FR (simple)
+  const isValidPostal = (cp) => /^[0-9]{5}$/.test((cp || "").trim());
+
+  // Continuer → ouvrir la carte centrée sur le CP
+  const continueWithPostal = async () => {
+    if (!isValidPostal(postalCode)) {
+      setPostalError("Entre un code postal valide (5 chiffres).");
+      return;
+    }
+    setPostalError("");
+    setShowPostalModal(false);
+    await openSendcloudPicker({ postalCode });
+  };
+
+  // Utiliser la position (optionnel)
+  const continueWithGeoloc = async () => {
+    if (!navigator.geolocation) {
+      setPostalError("La géolocalisation n'est pas disponible.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setPostalError("");
+        setShowPostalModal(false);
+        await openSendcloudPicker({ coords: pos.coords });
+      },
+      () => {
+        setPostalError("Autorise la géolocalisation ou saisis un code postal.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
   };
 
   return (
@@ -260,10 +303,10 @@ function CartOverlay({ isOpen, onClose }) {
                   backgroundColor: "white",
                   cursor: "pointer",
                 }}
-                onClick={async () => {
+                onClick={() => {
                   setDeliveryMode("pickup");
                   setShowDeliveryChoice(false);
-                  await openSendcloudPicker();
+                  setShowPostalModal(true); // 👉 on demande le code postal
                 }}
               >
                 Point relais Chronopost
@@ -279,6 +322,110 @@ function CartOverlay({ isOpen, onClose }) {
                 cursor: "pointer",
               }}
               onClick={() => setShowDeliveryChoice(false)}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Popup "Code postal" avant d'ouvrir la carte */}
+      {showPostalModal && (
+        <div
+          className="postalModal"
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+          }}
+        >
+          <div
+            className="postalModal__content"
+            style={{
+              background: "white",
+              padding: "1.5rem",
+              borderRadius: "12px",
+              width: "92%",
+              maxWidth: "420px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+              textAlign: "center",
+            }}
+          >
+            <h3>Où souhaites-tu récupérer ton colis ?</h3>
+            <p style={{ marginTop: 6, color: "#666" }}>
+              Entre ton code postal pour centrer la carte, ou utilise ta position.
+            </p>
+
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={5}
+              placeholder="Code postal (ex. 75001)"
+              value={postalCode}
+              onChange={(e) => {
+                setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5));
+                setPostalError("");
+              }}
+              style={{
+                width: "100%",
+                marginTop: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                fontSize: 16,
+                textAlign: "center",
+                letterSpacing: 1,
+              }}
+            />
+
+            {postalError && <p style={{ color: "crimson", marginTop: 8 }}>{postalError}</p>}
+
+            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+              <button
+                onClick={continueWithPostal}
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#111",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                Continuer
+              </button>
+              <button
+                onClick={continueWithGeoloc}
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #111",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                Utiliser ma position
+              </button>
+            </div>
+
+            <button
+              style={{
+                marginTop: 10,
+                border: "none",
+                background: "transparent",
+                color: "#666",
+                cursor: "pointer",
+              }}
+              onClick={() => setShowPostalModal(false)}
             >
               Annuler
             </button>
