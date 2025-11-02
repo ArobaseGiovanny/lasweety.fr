@@ -36,11 +36,25 @@ const orderSchema = new mongoose.Schema({
     country: String,
   },
 
+  deliveryMode: { type: String, enum: ["home", "pickup"], required: true, default: "home" },
+  pickupPoint: {
+    id: String,
+    name: String,
+    address: String,
+    zip: String,
+    city: String,
+    lat: Number,
+    lng: Number,
+    carrier: String,
+    postNumber: String,
+  },
+
   status: {
     type: String,
     enum: ["pending", "processing", "paid", "canceled", "refunded"],
     default: "pending",
   },
+  
 
   emailSent: { type: Boolean, default: false },
   emailSentAt: { type: Date, default: null },

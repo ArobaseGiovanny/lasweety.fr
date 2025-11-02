@@ -14,15 +14,42 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const YOUR_DOMAIN = process.env.FRONTEND_URL;
 
 /**
+ * Utils
+ */
+function sanitizePickupPoint(pp) {
+  if (!pp) return null;
+  return {
+    id: pp.id ? String(pp.id) : "",
+    name: pp.name ? String(pp.name) : "",
+    address: pp.address ? String(pp.address) : "",
+    zip: pp.zip ? String(pp.zip) : "",
+    city: pp.city ? String(pp.city) : "",
+    lat: typeof pp.lat === "number" ? pp.lat : Number(pp.lat || 0),
+    lng: typeof pp.lng === "number" ? pp.lng : Number(pp.lng || 0),
+    carrier: pp.carrier ? String(pp.carrier) : "",
+    postNumber: pp.postNumber ? String(pp.postNumber) : "",
+  };
+}
+
+/**
  * ➝ Création d'une session Stripe
+ * Reçoit: { cart: [{id, quantity}], deliveryMode: "home"|"pickup", pickupPoint?: {...} }
  */
 router.post("/create-session", async (req, res) => {
   try {
-    const { cart } = req.body;
+    const { cart, deliveryMode, pickupPoint } = req.body;
 
     if (!cart || cart.length === 0) {
       return res.status(400).json({ error: "Panier vide" });
     }
+    if (!["home", "pickup"].includes(deliveryMode)) {
+      return res.status(400).json({ error: "Mode de livraison invalide" });
+    }
+    if (deliveryMode === "pickup" && !pickupPoint) {
+      return res.status(400).json({ error: "Point relais manquant" });
+    }
+
+    const safePickup = deliveryMode === "pickup" ? sanitizePickupPoint(pickupPoint) : null;
 
     const line_items = [];
     const validatedCart = [];
@@ -60,6 +87,32 @@ router.post("/create-session", async (req, res) => {
       });
     }
 
+    // Options d’expédition selon le mode
+    const shippingOptions =
+      deliveryMode === "home"
+        ? [
+            {
+              shipping_rate_data: {
+                type: "fixed_amount",
+                fixed_amount: { amount: 0, currency: "eur" },
+                display_name: "Livraison à domicile (gratuite)",
+                delivery_estimate: {
+                  minimum: { unit: "business_day", value: 3 },
+                  maximum: { unit: "business_day", value: 5 },
+                },
+              },
+            },
+          ]
+        : [
+            {
+              shipping_rate_data: {
+                type: "fixed_amount",
+                fixed_amount: { amount: 0, currency: "eur" },
+                display_name: "Point relais Chronopost",
+              },
+            },
+          ];
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -68,20 +121,9 @@ router.post("/create-session", async (req, res) => {
       cancel_url: `${YOUR_DOMAIN}/cancel`,
       customer_creation: "always",
       billing_address_collection: "required",
-      shipping_address_collection: { allowed_countries: ["FR", "BE"] },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: { amount: 0, currency: "eur" },
-            display_name: "Livraison standard (gratuite)",
-            delivery_estimate: {
-              minimum: { unit: "business_day", value: 3 },
-              maximum: { unit: "business_day", value: 5 },
-            },
-          },
-        },
-      ],
+      shipping_address_collection:
+        deliveryMode === "home" ? { allowed_countries: ["FR", "BE"] } : undefined,
+      shipping_options: shippingOptions,
       metadata: {
         // ⚡ On ne garde que les IDs et quantités (pas les prix)
         cart: JSON.stringify(
@@ -90,7 +132,11 @@ router.post("/create-session", async (req, res) => {
             quantity: item.quantity,
           }))
         ),
+        deliveryMode,
+        pickupPoint: safePickup ? JSON.stringify(safePickup) : "",
       },
+      // (si tu actives Stripe Tax)
+      // automatic_tax: { enabled: true },
     });
 
     res.json({ url: session.url });
@@ -102,6 +148,9 @@ router.post("/create-session", async (req, res) => {
 
 /**
  * ➝ Webhook Stripe (paiement réussi)
+ * ⚠️ IMPORTANT: Monte ce endpoint avec express.raw dans ton serveur principal:
+ * app.post("/checkout/webhook", express.raw({ type: "application/json" }), checkoutRouter);
+ * Et seulement après, app.use(express.json()) pour le reste.
  */
 router.post("/webhook", async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -162,16 +211,38 @@ router.post("/webhook", async (req, res) => {
         }
       }
 
+      // ➝ Livraison (depuis metadata)
+      const deliveryMode =
+        sessionObj.metadata?.deliveryMode === "pickup" ? "pickup" : "home";
+
+      let pickupPoint = null;
+      if (deliveryMode === "pickup" && sessionObj.metadata?.pickupPoint) {
+        try {
+          pickupPoint = sanitizePickupPoint(JSON.parse(sessionObj.metadata.pickupPoint));
+        } catch {
+          pickupPoint = null;
+        }
+      }
+
       // Créer la commande
       const orderData = {
         orderNumber,
         stripeSessionId: sessionObj.id,
+        stripePaymentIntentId: sessionObj.payment_intent || null,
+        stripeCustomerId: sessionObj.customer || null,
+
         products: validatedProducts,
         total: stripeTotal,
+
         customerEmail: sessionObj.customer_details?.email || "unknown",
         customerName: sessionObj.customer_details?.name || "unknown",
+
         shippingAddress: sessionObj.shipping_details?.address || {},
         billingAddress: sessionObj.customer_details?.address || {},
+
+        deliveryMode,          // 👈 nouveau
+        pickupPoint,           // 👈 nouveau
+
         status: "paid",
         emailSent: false,
         emailAttempts: 0,
@@ -195,7 +266,8 @@ router.post("/webhook", async (req, res) => {
         );
         if (claim.modifiedCount === 1) {
           const freshOrder = await Order.findById(created._id).lean();
-          const html = orderConfirmationTemplate(freshOrder);
+
+          const html = orderConfirmationTemplate(freshOrder); // ➜ pense à afficher pickup/home dans le template
           await sendMail({
             to: freshOrder.customerEmail,
             subject: `Confirmation de commande ${freshOrder.orderNumber}`,
@@ -219,9 +291,6 @@ router.post("/webhook", async (req, res) => {
   }
 });
 
-
-
-
 /**
  * ➝ Récupération d'une commande via sessionId
  */
@@ -239,3 +308,4 @@ router.get("/order/:sessionId", async (req, res) => {
 });
 
 export default router;
+
