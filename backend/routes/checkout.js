@@ -14,7 +14,9 @@ const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const YOUR_DOMAIN = process.env.FRONTEND_URL;
 
-/** Normalise l'objet point relais */
+/**
+ * Normalise et sécurise l'objet « point relais » reçu du front.
+ */
 function sanitizePickupPoint(pp) {
   if (!pp) return null;
   return {
@@ -30,41 +32,22 @@ function sanitizePickupPoint(pp) {
   };
 }
 
-/** Tente d'extraire un nom client fiable depuis la session Checkout */
-function resolveCustomerName(sessionObj) {
-  // 1) custom_fields.full_name (obligatoire)
-  const cf = Array.isArray(sessionObj.custom_fields) ? sessionObj.custom_fields : [];
-  const fullName = cf.find(f => f.key === "full_name")?.text?.value?.trim();
-  if (fullName) return fullName;
-
-  // 2) nom de livraison Stripe
-  const shipName = sessionObj.shipping_details?.name?.trim();
-  if (shipName) return shipName;
-
-  // 3) nom client Stripe
-  const custName = sessionObj.customer_details?.name?.trim();
-  if (custName) return custName;
-
-  return "unknown";
-}
-
 /**
  * Crée une session Stripe Checkout.
- * Body: { cart:[{id,quantity}], deliveryMode:"home"|"pickup", pickupPoint?:{...} }
+ * Expects: { cart: [{ id, quantity }], deliveryMode: "home"|"pickup", pickupPoint?: {...} }
  */
 router.post("/create-session", async (req, res) => {
   try {
     const { cart, deliveryMode, pickupPoint } = req.body;
 
+      const totalQty = cart.reduce((sum, it) => sum + Math.max(1, Number(it.quantity) || 1), 0);
+    if (totalQty > 4) {
+    return res.status(400).json({ error: "Quantité maximale: 4 articles par commande" });
+    }
+
     if (!Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ error: "Panier vide" });
     }
-
-    const totalQty = cart.reduce((sum, it) => sum + Math.max(1, Number(it.quantity) || 1), 0);
-    if (totalQty > 4) {
-      return res.status(400).json({ error: "Quantité maximale: 4 articles par commande" });
-    }
-
     if (!["home", "pickup"].includes(deliveryMode)) {
       return res.status(400).json({ error: "Mode de livraison invalide" });
     }
@@ -72,12 +55,13 @@ router.post("/create-session", async (req, res) => {
       return res.status(400).json({ error: "Point relais manquant" });
     }
 
-    const safePickup = deliveryMode === "pickup" ? sanitizePickupPoint(pickupPoint) : null;
+    const safePickup =
+      deliveryMode === "pickup" ? sanitizePickupPoint(pickupPoint) : null;
 
     const line_items = [];
     const validatedCart = [];
 
-    // Validation produit + stock
+    // Validation des produits + contrôle de stock au moment de la création de session
     for (const item of cart) {
       const p = products[item.id];
       if (!p) {
@@ -107,7 +91,7 @@ router.post("/create-session", async (req, res) => {
       });
     }
 
-    // Options de livraison
+    // Options de livraison en fonction du mode choisi
     const shippingOptions =
       deliveryMode === "home"
         ? [
@@ -135,39 +119,19 @@ router.post("/create-session", async (req, res) => {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      customer_creation: "always", 
       payment_method_types: ["card"],
       line_items,
       success_url: `${YOUR_DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${YOUR_DOMAIN}/cancel`,
-
-      // Crée un customer Stripe et remplit ses détails si possible
       customer_creation: "always",
-      customer_update: { name: "auto", address: "auto" },
-
-      // Adresse de facturation demandée systématiquement (collecte le nom selon le PM)
       billing_address_collection: "required",
-
-      // Adresse de livraison uniquement pour "home"
-      shipping_address_collection: deliveryMode === "home"
-        ? { allowed_countries: ["FR", "BE"] }
-        : undefined,
-
-      // Collecte du téléphone
       phone_number_collection: { enabled: true },
-
-      // Champ "Nom complet" obligatoire (marche pour home & pickup)
-      custom_fields: [
-        {
-          key: "full_name",
-          label: { type: "custom", custom: "Nom complet" },
-          type: "text",
-          optional: false, // requis
-        },
-      ],
-
+      shipping_address_collection:
+      deliveryMode === "home" ? { allowed_countries: ["FR", "BE"] } : undefined,
       shipping_options: shippingOptions,
-
       metadata: {
+        // Ne stocker que les IDs et quantités dans les metadata
         cart: JSON.stringify(
           validatedCart.map(({ id, quantity }) => ({ id, quantity }))
         ),
@@ -178,13 +142,18 @@ router.post("/create-session", async (req, res) => {
 
     return res.json({ url: session.url });
   } catch (error) {
+    // Ne pas divulguer d'informations sensibles en prod
     return res.status(500).json({ error: "Erreur lors de la création de session" });
   }
 });
 
 /**
  * Webhook Stripe Checkout (paiement réussi).
- * Doit être monté avec express.raw({ type: "application/json" }) avant express.json().
+ * IMPORTANT: ce endpoint doit être monté avec express.raw({ type: "application/json" }) AVANT express.json().
+ * Exemple dans server.js/app.js :
+ *   app.post("/api/checkout/webhook", express.raw({ type: "application/json" }), checkoutRouter);
+ *   app.use(express.json());
+ *   app.use("/api/checkout", checkoutRouter);
  */
 router.post("/webhook", async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -196,7 +165,7 @@ router.post("/webhook", async (req, res) => {
     if (event.type === "checkout.session.completed") {
       const sessionObj = event.data.object;
 
-      // Idempotence
+      // Idempotence de création d'ordre
       const exists = await Order.findOne({ stripeSessionId: sessionObj.id });
       if (exists) {
         return res.json({ received: true });
@@ -204,10 +173,11 @@ router.post("/webhook", async (req, res) => {
 
       const orderNumber = `#SWEETY-${Math.floor(10000 + Math.random() * 90000)}`;
 
-      // Panier depuis metadata
+      // Reconstruction panier depuis metadata + recalcul du total
       let rawCart = [];
       let validatedProducts = [];
       let recalculatedTotal = 0;
+
 
       try {
         rawCart = JSON.parse(sessionObj.metadata?.cart || "[]");
@@ -221,21 +191,27 @@ router.post("/webhook", async (req, res) => {
           })
           .filter(Boolean);
       } catch {
-        // keep empty if parse fails
+        // Si le parsing échoue, validatedProducts restera vide
       }
 
-      // Colis (gabarit + poids)
+            // Quantité totale
       const totalQty = validatedProducts.reduce((sum, it) => sum + it.quantity, 0);
+
+      // Sélection du gabarit
       const pkg = selectPackaging(totalQty);
       const packageType = totalQty <= PACKAGING.SMALL.maxItems ? "SMALL" : "LARGE";
 
+      // Poids total = somme des poids unitaires × quantité + tare carton
       let itemsWeightKg = 0;
       for (const it of validatedProducts) {
-        const unitWeight = Number(products[it.id]?.weightKg || 0);
+        const p = products[it.id];
+        const unitWeight = Number(p?.weightKg || 0);
         itemsWeightKg += unitWeight * it.quantity;
       }
-      const totalWeightKg = Number((itemsWeightKg + Number(pkg.tareKg || 0)).toFixed(3));
 
+      const totalWeightKg = Number((itemsWeightKg + pkg.tareKg).toFixed(3));
+
+      // Objet colis final
       const parcel = {
         weightKg: totalWeightKg,
         lengthCm: pkg.lengthCm,
@@ -245,8 +221,9 @@ router.post("/webhook", async (req, res) => {
       };
 
       const stripeTotal = sessionObj.amount_total ? sessionObj.amount_total / 100 : 0;
+      // En prod, on loguera en interne si nécessaire l'écart éventuel.
 
-      // Décrément stock post-paiement
+      // Décrément de stock post-paiement (meilleure sécurité que pré-paiement seul)
       for (const it of rawCart) {
         await Product.updateOne(
           { id: it.id, stock: { $gte: it.quantity } },
@@ -254,22 +231,19 @@ router.post("/webhook", async (req, res) => {
         );
       }
 
-      // Mode livraison + point relais
+      // Lecture du mode de livraison et du point relais depuis metadata
       const deliveryMode =
         sessionObj.metadata?.deliveryMode === "pickup" ? "pickup" : "home";
       let pickupPoint = null;
       if (deliveryMode === "pickup" && sessionObj.metadata?.pickupPoint) {
         try {
-          pickupPoint = sanitizePickupPoint(JSON.parse(sessionObj.metadata.pickupPoint));
+          pickupPoint = sanitizePickupPoint(
+            JSON.parse(sessionObj.metadata.pickupPoint)
+          );
         } catch {
           pickupPoint = null;
         }
       }
-
-      // Nom / email / téléphone
-      const customerName = resolveCustomerName(sessionObj);
-      const customerEmail = sessionObj.customer_details?.email || "unknown";
-      const customerPhone = sessionObj.customer_details?.phone || null;
 
       // Création de la commande
       const orderData = {
@@ -281,15 +255,15 @@ router.post("/webhook", async (req, res) => {
         products: validatedProducts,
         total: stripeTotal,
 
-        customerEmail,
-        customerName,
-        customerPhone,
+        customerEmail: sessionObj.customer_details?.email || "unknown",
+        customerName: sessionObj.customer_details?.name || "unknown",
 
         shippingAddress: sessionObj.shipping_details?.address || {},
         billingAddress: sessionObj.customer_details?.address || {},
 
         deliveryMode,
         pickupPoint,
+
         parcel,
 
         status: "paid",
@@ -302,10 +276,11 @@ router.post("/webhook", async (req, res) => {
       try {
         created = await Order.create(orderData);
       } catch {
+        // Si la création échoue, répondre OK au webhook pour éviter des retries infinis
         return res.json({ received: true });
       }
 
-      // Envoi e-mail (idempotent)
+      // Envoi de l'email de confirmation (idempotent)
       try {
         const claim = await Order.updateOne(
           { _id: created._id, emailSent: false },
@@ -320,19 +295,28 @@ router.post("/webhook", async (req, res) => {
             subject: `Confirmation de commande ${freshOrder.orderNumber}`,
             html,
           });
+        } else {
+          // Email déjà envoyé par un autre worker/process
         }
       } catch {
-        await Order.updateOne({ _id: created._id }, { $set: { emailSent: false } });
+        // En cas d'échec d'envoi, remettre le flag pour réessai ultérieur
+        await Order.updateOne(
+          { _id: created._id },
+          { $set: { emailSent: false } }
+        );
       }
     }
 
     return res.json({ received: true });
   } catch {
+    // Signature invalide ou payload invalide
     return res.status(400).send("Webhook error");
   }
 });
 
-/** Récupère une commande par sessionId Stripe (page de succès) */
+/**
+ * Récupère une commande par sessionId Stripe (pour la page de succès).
+ */
 router.get("/order/:sessionId", async (req, res) => {
   try {
     const order = await Order.findOne({
@@ -342,7 +326,7 @@ router.get("/order/:sessionId", async (req, res) => {
       return res.status(404).json({ error: "Commande introuvable" });
     }
     return res.json(order);
-  } catch {
+  } catch (err) {
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
