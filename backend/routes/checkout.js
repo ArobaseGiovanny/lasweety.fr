@@ -123,25 +123,12 @@ router.post("/create-session", async (req, res) => {
       line_items,
       success_url: `${YOUR_DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${YOUR_DOMAIN}/cancel`,
+      customer_creation: "always",
       billing_address_collection: "required",
       phone_number_collection: { enabled: true },
       shipping_address_collection:
       deliveryMode === "home" ? { allowed_countries: ["FR", "BE"] } : undefined,
       shipping_options: shippingOptions,
-      custom_fields: [
-        {
-          key: "first_name",
-          label: { type: "custom", custom: "Prénom" },
-          type: "text",
-          optional: false,
-        },
-        {
-          key: "last_name",
-          label: { type: "custom", custom: "Nom" },
-          type: "text",
-          optional: false,
-        },
-      ],
       metadata: {
         // Ne stocker que les IDs et quantités dans les metadata
         cart: JSON.stringify(
