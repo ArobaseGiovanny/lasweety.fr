@@ -58,13 +58,6 @@ function CartOverlay({ isOpen, onClose }) {
 
     // Stripe checkout
     const handleCheckout = async (mode, point = null) => {
-    const payload = {
-    cart: cart.map(i => ({ id: i.id, quantity: i.quantity })),
-    deliveryMode: mode,
-    pickupPoint: point,
-  };
-console.log("[FRONT] API_URL =", API_URL);
-console.log("[FRONT] POST =>", `${API_URL}/checkout/create-session`, payload);
     try {
       const response = await fetch(`${API_URL}/checkout/create-session`, {
         method: "POST",
