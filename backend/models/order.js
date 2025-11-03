@@ -16,7 +16,6 @@ const orderSchema = new mongoose.Schema({
     },
   ],
 
-  customerPhone: String, 
 
   parcel: {
     weightKg: Number,     
@@ -27,7 +26,7 @@ const orderSchema = new mongoose.Schema({
   },
 
   total: Number,
-
+  customerPhone: String, 
   customerEmail: String,
   customerName: String,
 

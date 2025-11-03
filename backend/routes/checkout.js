@@ -164,6 +164,8 @@ router.post("/webhook", async (req, res) => {
     if (event.type === "checkout.session.completed") {
       const sessionObj = event.data.object;
 
+      const customerPhone = sessionObj.customer_details?.phone || null;
+
       // Idempotence de création d'ordre
       const exists = await Order.findOne({ stripeSessionId: sessionObj.id });
       if (exists) {
@@ -195,6 +197,7 @@ router.post("/webhook", async (req, res) => {
 
             // Quantité totale
       const totalQty = validatedProducts.reduce((sum, it) => sum + it.quantity, 0);
+      
 
       // Sélection du gabarit
       const pkg = selectPackaging(totalQty);
@@ -256,6 +259,7 @@ router.post("/webhook", async (req, res) => {
 
         customerEmail: sessionObj.customer_details?.email || "unknown",
         customerName: sessionObj.customer_details?.name || "unknown",
+        customerPhone,
 
         shippingAddress: sessionObj.shipping_details?.address || {},
         billingAddress: sessionObj.customer_details?.address || {},
