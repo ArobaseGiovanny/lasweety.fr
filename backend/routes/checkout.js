@@ -130,6 +130,20 @@ router.post("/create-session", async (req, res) => {
       shipping_address_collection:
       deliveryMode === "home" ? { allowed_countries: ["FR", "BE"] } : undefined,
       shipping_options: shippingOptions,
+      custom_fields: [
+        {
+          key: "first_name",
+          label: { type: "custom", custom: "Prénom" },
+          type: "text",
+          optional: false,
+        },
+        {
+          key: "last_name",
+          label: { type: "custom", custom: "Nom" },
+          type: "text",
+          optional: false,
+        },
+      ],
       metadata: {
         // Ne stocker que les IDs et quantités dans les metadata
         cart: JSON.stringify(
