@@ -35,7 +35,11 @@ function sanitizePickupPoint(pp) {
  * ➝ Création d'une session Stripe
  * Reçoit: { cart: [{id, quantity}], deliveryMode: "home"|"pickup", pickupPoint?: {...} }
  */
+
 router.post("/create-session", async (req, res) => {
+  console.log("[CS] body.deliveryMode:", req.body?.deliveryMode);
+  console.log("[CS] body.pickupPoint:", req.body?.pickupPoint);
+
   try {
     const { cart, deliveryMode, pickupPoint } = req.body;
 
