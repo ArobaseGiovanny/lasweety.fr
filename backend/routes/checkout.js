@@ -176,32 +176,6 @@ router.post("/webhook", async (req, res) => {
       let validatedProducts = [];
       let recalculatedTotal = 0;
 
-      // Quantité totale
-      const totalQty = validatedProducts.reduce((sum, it) => sum + it.quantity, 0);
-
-      // Sélection du gabarit
-      const pkg = selectPackaging(totalQty);
-      const packageType = totalQty <= PACKAGING.SMALL.maxItems ? "SMALL" : "LARGE";
-
-      // Poids total = somme des poids unitaires × quantité + tare carton
-      let itemsWeightKg = 0;
-      for (const it of validatedProducts) {
-        const p = products[it.id];
-        const unitWeight = Number(p?.weightKg || 0);
-        itemsWeightKg += unitWeight * it.quantity;
-      }
-
-  const totalWeightKg = Number((itemsWeightKg + pkg.tareKg).toFixed(3));
-
-  // Objet colis final
-  const parcel = {
-    weightKg: totalWeightKg,
-    lengthCm: pkg.lengthCm,
-    widthCm: pkg.widthCm,
-    heightCm: pkg.heightCm,
-    packageType,
-  };
-
 
       try {
         rawCart = JSON.parse(sessionObj.metadata?.cart || "[]");
@@ -217,6 +191,32 @@ router.post("/webhook", async (req, res) => {
       } catch {
         // Si le parsing échoue, validatedProducts restera vide
       }
+
+            // Quantité totale
+      const totalQty = validatedProducts.reduce((sum, it) => sum + it.quantity, 0);
+
+      // Sélection du gabarit
+      const pkg = selectPackaging(totalQty);
+      const packageType = totalQty <= PACKAGING.SMALL.maxItems ? "SMALL" : "LARGE";
+
+      // Poids total = somme des poids unitaires × quantité + tare carton
+      let itemsWeightKg = 0;
+      for (const it of validatedProducts) {
+        const p = products[it.id];
+        const unitWeight = Number(p?.weightKg || 0);
+        itemsWeightKg += unitWeight * it.quantity;
+      }
+
+      const totalWeightKg = Number((itemsWeightKg + pkg.tareKg).toFixed(3));
+
+      // Objet colis final
+      const parcel = {
+        weightKg: totalWeightKg,
+        lengthCm: pkg.lengthCm,
+        widthCm: pkg.widthCm,
+        heightCm: pkg.heightCm,
+        packageType,
+      };
 
       const stripeTotal = sessionObj.amount_total ? sessionObj.amount_total / 100 : 0;
       // En prod, on loguera en interne si nécessaire l'écart éventuel.
