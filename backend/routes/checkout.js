@@ -6,6 +6,7 @@ import products from "../data/product.js";
 import Product from "../models/product.js";
 import { sendMail } from "../services/mailer.js";
 import { orderConfirmationTemplate } from "../services/orderConfirmation.js";
+import { PACKAGING, selectPackaging } from "../config/shipping.js";
 
 dotenv.config();
 
@@ -38,6 +39,11 @@ function sanitizePickupPoint(pp) {
 router.post("/create-session", async (req, res) => {
   try {
     const { cart, deliveryMode, pickupPoint } = req.body;
+
+      const totalQty = cart.reduce((sum, it) => sum + Math.max(1, Number(it.quantity) || 1), 0);
+    if (totalQty > 4) {
+    return res.status(400).json({ error: "Quantité maximale: 4 articles par commande" });
+    }
 
     if (!Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ error: "Panier vide" });
@@ -170,6 +176,33 @@ router.post("/webhook", async (req, res) => {
       let validatedProducts = [];
       let recalculatedTotal = 0;
 
+      // Quantité totale
+      const totalQty = validatedProducts.reduce((sum, it) => sum + it.quantity, 0);
+
+      // Sélection du gabarit
+      const pkg = selectPackaging(totalQty);
+      const packageType = totalQty <= PACKAGING.SMALL.maxItems ? "SMALL" : "LARGE";
+
+      // Poids total = somme des poids unitaires × quantité + tare carton
+      let itemsWeightKg = 0;
+      for (const it of validatedProducts) {
+        const p = products[it.id];
+        const unitWeight = Number(p?.weightKg || 0);
+        itemsWeightKg += unitWeight * it.quantity;
+      }
+
+  const totalWeightKg = Number((itemsWeightKg + pkg.tareKg).toFixed(3));
+
+  // Objet colis final
+  const parcel = {
+    weightKg: totalWeightKg,
+    lengthCm: pkg.lengthCm,
+    widthCm: pkg.widthCm,
+    heightCm: pkg.heightCm,
+    packageType,
+  };
+
+
       try {
         rawCart = JSON.parse(sessionObj.metadata?.cart || "[]");
         validatedProducts = rawCart
@@ -228,6 +261,8 @@ router.post("/webhook", async (req, res) => {
 
         deliveryMode,
         pickupPoint,
+
+        parcel,
 
         status: "paid",
         emailSent: false,

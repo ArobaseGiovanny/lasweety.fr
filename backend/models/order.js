@@ -16,6 +16,16 @@ const orderSchema = new mongoose.Schema({
     },
   ],
 
+  customerPhone: String, 
+
+  parcel: {
+    weightKg: Number,     
+    lengthCm: Number,     
+    widthCm: Number,
+    heightCm: Number,
+    packageType: String,  // "SMALL" | "LARGE"
+  },
+
   total: Number,
 
   customerEmail: String,
