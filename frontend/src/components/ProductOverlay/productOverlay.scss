@@ -1,243 +1,340 @@
 @use "../../styles/variables" as *;
 
-$product-default-color: #0095ff; 
+$product-default-color: #0095ff;
 
 .productOverlay {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: calc(100% - 70px);
+  background-color: white;
+  position: fixed;
+  bottom: 0;
+  z-index: 150;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  padding: 0 20px 0 20px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.4s ease-in-out;
+
+  &.isOpen {
+    transform: translateY(0%);
+  }
+
+  &__close {
+    display: none;
+    position: sticky;
     width: 100%;
-    max-width: 500px;
-    height: 100%;
-    max-height: calc(100% - 70px);
-    background-color: white;
-    position: fixed;
-    bottom: 0;
-    z-index: 150;
+    text-align: right;
+    top: 20px;
+    justify-content: flex-end;
+    align-items: center;
+    font-size: 3em;
+    color: $product-default-color; // fallback
+
+    & svg {
+      cursor: pointer;
+    }
+  }
+
+  &__scroll-hint {
+    z-index: 1000;
+    position: sticky;
+    width: 100%;
+    top: -0px;
+    background: white;
     display: flex;
-    justify-content: flex-start;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+
+    & span {
+      display: block;
+      width: 40px;
+      height: 6px;
+      background-color: grey;
+      border-radius: 16px;
+    }
+  }
+
+  /* ====== CARROUSEL ====== */
+  &__carousel {
+    width: 100%;
+    position: relative;
+    margin-bottom: 12px;
+    outline: none; // focus handled below
+  }
+
+  &__carousel-viewport {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 15px;
+    touch-action: pan-y; // allow vertical scroll; horizontal handled manually
+    background: #f7f7f7;
+  }
+
+  &__carousel-track {
+    display: flex;
+    width: 100%;
+    transition: transform 320ms ease;
+    will-change: transform;
+  }
+
+  &__carousel-slide {
+    min-width: 100%;
+    user-select: none;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      pointer-events: none;
+      border-radius: 15px;
+    }
+  }
+
+  &__carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: rgba(0, 0, 0, 0.5); // fallback, themed below
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    z-index: 2;
+
+    &--prev {
+      left: 8px;
+    }
+    &--next {
+      right: 8px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+  }
+
+  &__carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  &__carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: none;
+    background: #bbb; // fallback, themed below
+    cursor: pointer;
+    padding: 0;
+
+    &.isActive {
+      background: #333; // fallback, themed below
+    }
+
+    &:focus-visible {
+      outline: 2px solid #333;
+      outline-offset: 2px;
+    }
+  }
+
+  /* visible ring when carousel receives keyboard focus */
+  &__carousel:focus-visible {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+  }
+  /* ====== FIN CARROUSEL ====== */
+
+  &__description {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    & h2 {
+      text-align: center;
+      font-family: "Cherry Bomb One", system-ui;
+      font-size: 2.5em;
+      margin-top: 7px;
+      color: $product-default-color; // fallback
+    }
+
+    & p {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+      color: #393939;
+      font-weight: lighter;
+      margin-top: 15px;
+      font-size: 1.1em;
+      line-height: 1.1em;
+    }
+  }
+
+  &__colors {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 20px;
+
+    & p {
+      text-align: left;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+      font-weight: lighter;
+      color: #868686;
+    }
+  }
+
+  &__box-color {
+    width: 100%;
+    height: 50px;
+    margin-top: 10px;
+
+    & span {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      margin-right: 7px;
+    }
+  }
+
+  &__purchase {
+    display: flex;
+    justify-content: center;
     align-items: center;
     flex-direction: column;
-    border-radius: 20px 20px 0px 0px;
-    padding: 0 20px 0px 20px;
-    overflow-y: auto;
-    transform: translateY(100%);
-    transition: transform 0.4s ease-in-out;
+    width: 100%;
+    padding-top: 40px;
+    position: sticky;
+    bottom: 0;
+    background-color: white;
+  }
 
-    &.isOpen {
-        transform: translateY(0%);
+  &__quantity-price {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__quantity {
+    &-btn {
+      border: none;
+      background-color: $product-default-color; // fallback
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 2em;
+      color: white;
+      cursor: pointer;
     }
 
-    &__close {
-        display: none;
-        position: sticky;
-        width: 100%;
-        text-align: right;
-        top: 20px;
-        justify-content: flex-end;
-        align-items: center;
-        font-size: 3em;
-        color: $product-default-color; // fallback
-        
-        & svg {
-            cursor: pointer;
-        }
+    &-value {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+      font-size: 1.8em;
+      font-weight: bolder;
+      padding: 0 15px;
+    }
+  }
+
+  &__price {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+    font-size: 2.2em;
+    font-weight: bolder;
+    position: relative;
+
+    &::before {
+      content: "€";
+      font-size: 0.3em;
+      position: absolute;
+      top: 0;
+      right: -5px;
+    }
+  }
+
+  &__add-to-cart {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+
+    & button {
+      cursor: pointer;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+      background-color: $product-default-color; // fallback
+      border: none;
+      color: white;
+      font-size: 1.3em;
+      font-weight: bold;
+      width: 100%;
+      padding: 15px 0;
+      border-radius: 25px;
     }
 
-    &__scroll-hint {
-        position: sticky;
-        width: 100%;
-        top: -0px;
-        background: white;
-        display: flex;
-        padding: 20px;
-        justify-content: center;
-        align-items: center;
-
-        & span {
-            display: block;
-            width: 40px;
-            height: 6px;
-            background-color: grey;
-            border-radius: 16px;
-        }
+    & p {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+      font-size: 0.9em;
+      padding: 10px 0 10px 0;
     }
-
-    &__images {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        & img {
-            width: 100%;
-            border-radius: 15px;
-        }
-    }
-
-    &__description {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-
-        & h2 {
-            text-align: center;
-            font-family: "Cherry Bomb One", system-ui;
-            font-size: 2.5em;
-            margin-top: 7px;
-            color: $product-default-color; // fallback
-        }
-
-        & p {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            color: #393939;
-            font-weight: lighter;
-            margin-top: 15px;
-            font-size: 1.1em;
-            line-height: 1.1em;
-        }
-    }
-
-    &__colors {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        margin-top: 20px;
-
-        & p {
-            text-align: left;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            font-weight: lighter;
-            color: #868686;
-        }
-    }
-
-    &__box-color {
-        width: 100%;
-        height: 50px;
-        margin-top: 10px;
-
-        & span {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            margin-right: 7px;
-        }
-    }
-
-    &__purchase {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        width: 100%;
-        padding-top: 40px;
-        position: sticky;
-        bottom: 0;
-        background-color: white;
-    }
-
-    &__quantity-price {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    &__quantity {
-        &-btn {
-            border: none;
-            background-color: $product-default-color; // fallback
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            font-size: 2em;
-            color: white;
-            cursor: pointer;
-        }
-
-        &-value {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            font-size: 1.8em;
-            font-weight: bolder;
-            padding: 0px 15px;
-        }
-    }
-
-    &__price {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        font-size: 2.2em;
-        font-weight: bolder;
-        position: relative;
-
-        &::before {
-            content: "€";
-            font-size: 0.3em;
-            position: absolute;
-            top: 0;
-            right: -5px;
-        }
-    }
-
-    &__add-to-cart {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin-top: 15px;
-
-        & button {
-            cursor: pointer;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: $product-default-color; // fallback
-            border: none;
-            color: white;
-            font-size: 1.3em;
-            font-weight: bold;
-            width: 100%;
-            padding: 15px 0;
-            border-radius: 25px;
-        }
-
-        & p {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            font-size: 0.9em;
-            padding: 10px 0 10px 0;
-        }
-    }
-}
-
-@media (min-width: 500px) {
-    .productOverlay {
-        bottom: 0;
-        border-radius: 0;
-        top: 0px;
-        left: 0;
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-        max-height: 100%;
-        transform: translateX(-100%);
-
-        &.isOpen {
-            transform: translateX(0%);
-        }
-
-        &__scroll-hint {
-            display: none;
-        }
-
-        &__close {
-            display: flex;
-        }
-    }
-}
-
-@each $name, $value in $colors {
-  .productOverlay__box-color--#{$name} {
-    background-color: $value;
   }
 }
 
+@media (min-width: 500px) {
+  .productOverlay {
+    bottom: 0;
+    border-radius: 0;
+    top: 0px;
+    left: 0;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    max-height: 100%;
+    transform: translateX(-100%);
+
+    &.isOpen {
+      transform: translateX(0%);
+    }
+
+    &__scroll-hint {
+      display: none;
+    }
+
+    &__close {
+      z-index: 1000;
+      display: flex;
+    }
+  }
+}
+
+/* Couleurs depuis la map $colors + thèmes dynamiques */
 @each $name, $value in $colors {
   .productOverlay__box-color--#{$name} {
     background-color: $value;
@@ -263,5 +360,29 @@ $product-default-color: #0095ff;
     .productOverlay__quantity-btn {
       background-color: $value;
     }
+
+    /* Théming du carrousel */
+    .productOverlay__carousel-dot.isActive {
+      background-color: $value;
+    }
+
+    .productOverlay__carousel-dot:focus-visible {
+      outline-color: $value;
+    }
+
+    .productOverlay__carousel:focus-visible {
+      box-shadow: 0 0 0 3px rgba($value, 0.3);
+    }
+
+    .productOverlay__carousel-arrow {
+      background-color: rgba($value, 0.9);
+      color: #fff;
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .productOverlay__carousel-arrow {
+    display: none;
   }
 }
