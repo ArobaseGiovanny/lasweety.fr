@@ -7,11 +7,30 @@ export function orderConfirmationTemplate(order) {
     </tr>
   `).join("");
 
+  // Construction de l'adresse selon le mode
+  let deliveryInfo = "";
+  if (order.deliveryMode === "home" && order.shippingAddress) {
+    const addr = order.shippingAddress;
+    const parts = [
+      addr.line1,
+      addr.line2,
+      addr.postal_code && addr.city ? `${addr.postal_code} ${addr.city}` : addr.city,
+      addr.country,
+    ].filter(Boolean);
+    deliveryInfo = parts.join(", ");
+  } else if (order.deliveryMode === "pickup" && order.pickupPoint) {
+    const pp = order.pickupPoint;
+    deliveryInfo = `${pp.name}, ${pp.address}, ${pp.zip} ${pp.city}`;
+  } else {
+    deliveryInfo = "Adresse non disponible";
+  }
+
   return `
   <div style="font-family:system-ui,Arial,sans-serif;max-width:560px;margin:auto;">
     <h2>Merci pour votre commande ${order.orderNumber}</h2>
     <p>Bonjour ${order.customerName || ""},</p>
     <p>Nous avons bien reçu votre paiement. Voici le récapitulatif :</p>
+
     <table style="width:100%;border-collapse:collapse">
       <thead>
         <tr>
@@ -29,9 +48,11 @@ export function orderConfirmationTemplate(order) {
         </tr>
       </tfoot>
     </table>
+
     <p style="margin-top:12px;">
-      Livraison à : ${order.shippingAddress?.line1 || ""}, ${order.shippingAddress?.postal_code || ""} ${order.shippingAddress?.city || ""}
+      Livraison à : ${deliveryInfo}
     </p>
+
     <p>Besoin d’aide ? Répondez à cet e-mail.</p>
     <p style="color:#888;font-size:12px;">© ${new Date().getFullYear()} Sweetyx</p>
   </div>
