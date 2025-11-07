@@ -55,6 +55,18 @@ const products = {
       { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur orange, bleue, rose et marron" },
 
     ],
+    specs: [
+      { label: "Type", value: "Jouet – Peluche" },       
+      { label: "Couleur", value: "Orange" },                              
+      { label: "Matière principale", value: "Polyester" },
+      { label: "Dimensions", value: "25 cm de hauteur" },                     
+      { label: "Âge", value: "3 ans et +" },                 
+      { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
+      { label: "Disponibilité", value: "En stock" },                    
+      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
+      { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
+      { label: "Vendeur", value: "La Sweety" },       
+]
   },
   102: {
     id: 102,
@@ -73,6 +85,18 @@ const products = {
       { src: pelucheBleuLolo, alt: "Peluche Sweetyx de couleur bleu dans les mains de Lilow" },
       { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur bleu, bleue, rose et marron" },
     ],
+    specs: [
+      { label: "Type", value: "Jouet – Peluche" },       
+      { label: "Couleur", value: "Bleu" },                              
+      { label: "Matière principale", value: "Polyester" },
+      { label: "Dimensions", value: "25 cm de hauteur" },                     
+      { label: "Âge", value: "3 ans et +" },                 
+      { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
+      { label: "Disponibilité", value: "En stock" },                    
+      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
+      { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
+      { label: "Vendeur", value: "La Sweety" },       
+]
   },
   103: {
     id: 103,
@@ -90,6 +114,18 @@ const products = {
       { src: pelucheRoseLolo, alt: "Peluche Sweetyx de couleur Rose dans les mains de Lilow" },
       { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur orange, bleue, rose et marron" },
     ],
+    specs: [
+      { label: "Type", value: "Jouet – Peluche" },       
+      { label: "Couleur", value: "Rose" },                              
+      { label: "Matière principale", value: "Polyester" },
+      { label: "Dimensions", value: "25 cm de hauteur" },                     
+      { label: "Âge", value: "3 ans et +" },                 
+      { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
+      { label: "Disponibilité", value: "En stock" },                    
+      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
+      { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
+      { label: "Vendeur", value: "La Sweety" },       
+    ]
   },
   104: {
     id: 104,
@@ -108,6 +144,18 @@ const products = {
       { src: pelucheMarronLolo, alt: "Peluche Sweetyx de couleur marron dans les mains de Lilow" },
       { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur bleu, bleue, rose et marron" },
     ],
+      specs: [
+    { label: "Type", value: "Jouet – Peluche" },       
+    { label: "Couleur", value: "Marron" },                              
+    { label: "Matière principale", value: "Polyester" },
+    { label: "Dimensions", value: "25 cm de hauteur" },                     
+    { label: "Âge", value: "3 ans et +" },                 
+    { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
+    { label: "Disponibilité", value: "En stock" },                    
+    { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
+    { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
+    { label: "Vendeur", value: "La Sweety" },       
+]
   },
 };
 

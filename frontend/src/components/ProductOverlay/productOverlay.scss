@@ -308,6 +308,159 @@ $product-default-color: #0095ff;
     }
   }
 }
+/* ============================= */
+/* ====== SPECS MODAL ========== */
+/* ============================= */
+
+.productOverlay__specs-link {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  display: inline-block;
+  padding: 10px;
+  margin-top: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 20px;
+  color: $product-default-color;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+/* ---- Backdrop ---- */
+.productOverlay__specs-backdrop {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.25s ease;
+}
+
+/* ---- Modal ---- */
+.productOverlay__specs-modal {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+.productOverlay__specs-header {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #eee;
+}
+
+.productOverlay__specs-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.productOverlay__specs-close {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #000;
+  }
+}
+
+/* ---- Content ---- */
+.productOverlay__specs-content {
+  padding: 1rem 1.25rem;
+}
+
+.productOverlay__specs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.productOverlay__specs-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #b5b5b5;
+  padding-bottom: 0.4rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.productOverlay__specs-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9em;
+}
+
+.productOverlay__specs-value {
+  color: #555;
+  text-align: right;
+  font-size: 0.8em;
+}
+
+/* ---- Footer ---- */
+.productOverlay__specs-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #eee;
+}
+
+.productOverlay__specs-action {
+  background-color: #222;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #000;
+  }
+}
+
+/* ---- Animations ---- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 
 @media (min-width: 500px) {
   .productOverlay {
@@ -377,6 +530,11 @@ $product-default-color: #0095ff;
     .productOverlay__carousel-arrow {
       background-color: rgba($value, 0.9);
       color: #fff;
+    }
+
+    .productOverlay__specs-link {
+      background-color: $value;
+      color: white;
     }
   }
 }

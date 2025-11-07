@@ -1,5 +1,5 @@
 import "./productOverlay.scss";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { useCart } from "../../context/CartContext";
 
@@ -10,6 +10,40 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
   const { addToCart } = useCart();
 
   const [quantity, setQuantity] = useState(1);
+
+  // ====== SPECS MODAL STATE ======
+  const [isSpecsOpen, setIsSpecsOpen] = useState(false);
+  const specsDialogRef = useRef(null);
+  const specsFirstFocusRef = useRef(null);
+  const openSpecs = () => setIsSpecsOpen(true);
+  const closeSpecs = () => setIsSpecsOpen(false);
+
+  // Disable body scroll when specs modal is open
+  useEffect(() => {
+    if (isSpecsOpen) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      // focus first element in modal
+      setTimeout(() => {
+        specsFirstFocusRef.current?.focus();
+      }, 0);
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [isSpecsOpen]);
+
+  // Close modal on Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && isSpecsOpen) {
+        e.stopPropagation();
+        closeSpecs();
+      }
+    };
+    window.addEventListener("keydown", onKey, { passive: true });
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isSpecsOpen]);
 
   const handleTouchStart = (e) => {
     setStartY(e.touches[0].clientY);
@@ -48,7 +82,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
       },
       quantity,
     };
-    console.log(item, stripeItem)
+    console.log(item, stripeItem);
     addToCart(product, quantity);
     onClose();
   };
@@ -93,6 +127,13 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
   const onKeyDown = (e) => {
     if (e.key === "ArrowRight") next();
     if (e.key === "ArrowLeft") prev();
+  };
+
+  // Close specs when clicking backdrop
+  const onSpecsBackdropClick = (e) => {
+    if (e.target === specsDialogRef.current) {
+      closeSpecs();
+    }
   };
 
   return (
@@ -182,6 +223,18 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
           {/* ====== FIN CARROUSEL ====== */}
 
           <div className="productOverlay__description">
+                        {/* ====== LINK TO SPECS MODAL ====== */}
+            {product?.specs?.length > 0 && (
+              <button
+                type="button"
+                className="productOverlay__specs-link"
+                onClick={openSpecs}
+                aria-haspopup="dialog"
+                aria-controls="product-specs-dialog"
+              >
+                Voir les caractéristiques
+              </button>
+            )}
             <h2>{product.name}</h2>
             <p>{product.description}</p>
           </div>
@@ -225,6 +278,54 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
               <p>Livraison offerte.</p>
             </div>
           </div>
+
+          {/* ====== SPECS MODAL ====== */}
+          {isSpecsOpen && (
+            <div
+              className="productOverlay__specs-backdrop"
+              role="presentation"
+              ref={specsDialogRef}
+              onMouseDown={onSpecsBackdropClick}
+              onTouchStart={onSpecsBackdropClick}
+            >
+              <div
+                className="productOverlay__specs-modal"
+                role="dialog"
+                id="product-specs-dialog"
+                aria-modal="true"
+                aria-labelledby="product-specs-title"
+                aria-describedby="product-specs-description"
+                tabIndex={-1}
+              >
+                <header className="productOverlay__specs-header">
+                  <h3 id="product-specs-title" className="productOverlay__specs-title">
+                    Caractéristiques — {product.name}
+                  </h3>
+                  <button
+                    ref={specsFirstFocusRef}
+                    type="button"
+                    className="productOverlay__specs-close"
+                    aria-label="Fermer la fenêtre des caractéristiques"
+                    onClick={closeSpecs}
+                  >
+                    <IoCloseCircleSharp aria-hidden="true" />
+                  </button>
+                </header>
+
+                <div id="product-specs-description" className="productOverlay__specs-content">
+                  <dl className="productOverlay__specs-list">
+                    {product.specs.map((s, i) => (
+                      <div key={`${s.label}-${i}`} className="productOverlay__specs-row">
+                        <dt className="productOverlay__specs-label">{s.label}</dt>
+                        <dd className="productOverlay__specs-value">{s.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* ====== FIN SPECS MODAL ====== */}
         </>
       ) : (
         <div style={{ flex: 1 }} />
