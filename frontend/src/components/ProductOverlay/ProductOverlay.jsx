@@ -1,5 +1,6 @@
 import "./productOverlay.scss";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { useCart } from "../../context/CartContext";
 
@@ -8,46 +9,75 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
   const [translateY, setTranslateY] = useState(0);
 
   const { addToCart } = useCart();
-
   const [quantity, setQuantity] = useState(1);
 
-  // ====== SPECS MODAL STATE ======
+  // ===== SPECS MODAL =====
   const [isSpecsOpen, setIsSpecsOpen] = useState(false);
   const specsDialogRef = useRef(null);
   const specsFirstFocusRef = useRef(null);
   const openSpecs = () => setIsSpecsOpen(true);
   const closeSpecs = () => setIsSpecsOpen(false);
 
-  // Disable body scroll when specs modal is open
+  // ===== LIGHTBOX =====
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const lightboxViewportRef = useRef(null);
+  const openLightbox = (idx = 0) => { setLightboxIndex(idx); setIsLightboxOpen(true); };
+  const closeLightbox = () => setIsLightboxOpen(false);
+
+  // Lock body scroll quand un overlay est ouvert
   useEffect(() => {
-    if (isSpecsOpen) {
+    if (isSpecsOpen || isLightboxOpen) {
       const original = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-      // focus first element in modal
-      setTimeout(() => {
-        specsFirstFocusRef.current?.focus();
-      }, 0);
-      return () => {
-        document.body.style.overflow = original;
-      };
+      return () => { document.body.style.overflow = original; };
     }
-  }, [isSpecsOpen]);
+  }, [isSpecsOpen, isLightboxOpen]);
 
-  // Close modal on Escape
+  // Positionner la lightbox au bon slide à l’ouverture
+  useEffect(() => {
+    if (isLightboxOpen && lightboxViewportRef.current) {
+      const vp = lightboxViewportRef.current;
+      const x = lightboxIndex * vp.clientWidth;
+      vp.scrollTo({ left: x, top: 0, behavior: "instant" });
+      if (vp.scrollLeft !== x) vp.scrollLeft = x;
+      vp.focus();
+    }
+  }, [isLightboxOpen, lightboxIndex]);
+
+  // Échap / flèches
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "Escape" && isSpecsOpen) {
-        e.stopPropagation();
-        closeSpecs();
+      if (e.key === "Escape") {
+        if (isLightboxOpen) { e.stopPropagation(); closeLightbox(); }
+        else if (isSpecsOpen) { e.stopPropagation(); closeSpecs(); }
+      }
+      if (isLightboxOpen && (e.key === "ArrowRight" || e.key === "ArrowLeft")) {
+        e.preventDefault();
+        const vp = lightboxViewportRef.current;
+        if (!vp) return;
+        const total = images.length;
+        const nextIdx = e.key === "ArrowRight"
+          ? (lightboxIndex + 1) % total
+          : (lightboxIndex - 1 + total) % total;
+        setLightboxIndex(nextIdx);
+        requestAnimationFrame(() => {
+          vp.scrollTo({ left: nextIdx * vp.clientWidth, behavior: "smooth" });
+        });
       }
     };
-    window.addEventListener("keydown", onKey, { passive: true });
+    window.addEventListener("keydown", onKey, { passive: false });
     return () => window.removeEventListener("keydown", onKey);
-  }, [isSpecsOpen]);
+  }, [isSpecsOpen, isLightboxOpen, lightboxIndex]); // eslint-disable-line
 
-  const handleTouchStart = (e) => {
-    setStartY(e.touches[0].clientY);
+  const onLightboxScroll = () => {
+    const vp = lightboxViewportRef.current;
+    if (!vp) return;
+    setLightboxIndex(Math.round(vp.scrollLeft / vp.clientWidth));
   };
+
+  // Swipe vertical pour fermer l’overlay produit
+  const handleTouchStart = (e) => setStartY(e.touches[0].clientY);
   const handleTouchMove = (e) => {
     if (startY !== null) {
       const delta = e.touches[0].clientY - startY;
@@ -62,7 +92,6 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
 
   const increaseQuantity = () => setQuantity((q) => q + 1);
   const decreaseQuantity = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
-
   const totalPrice = product ? product.price * quantity : 0;
 
   const handleAddToCart = () => {
@@ -87,20 +116,15 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
     onClose();
   };
 
-  // ====== CARROUSEL ======
+  // ===== CARROUSEL =====
   const images = product?.images ?? [];
   const [current, setCurrent] = useState(0);
   const trackRef = useRef(null);
 
-  const goTo = (idx) => {
-    if (!images.length) return;
-    const wrapped = (idx + images.length) % images.length;
-    setCurrent(wrapped);
-  };
+  const goTo = (idx) => { if (!images.length) return; setCurrent((idx + images.length) % images.length); };
   const next = () => goTo(current + 1);
   const prev = () => goTo(current - 1);
 
-  // swipe horizontal (limité à la zone images)
   const swipe = useRef({ x: 0, y: 0, dragging: false });
   const onImgTouchStart = (e) => {
     const t = e.touches[0];
@@ -111,14 +135,13 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
     const t = e.touches[0];
     const dx = t.clientX - swipe.current.x;
     const dy = t.clientY - swipe.current.y;
-    // si le geste est plus horizontal que vertical on empêche le scroll
     if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
   };
   const onImgTouchEnd = (e) => {
     if (!swipe.current.dragging) return;
     const changed = e.changedTouches[0];
     const dx = changed.clientX - swipe.current.x;
-    const threshold = 40; // px
+    const threshold = 40;
     if (dx <= -threshold) next();
     if (dx >= threshold) prev();
     swipe.current.dragging = false;
@@ -129,11 +152,12 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
     if (e.key === "ArrowLeft") prev();
   };
 
-  // Close specs when clicking backdrop
   const onSpecsBackdropClick = (e) => {
-    if (e.target === specsDialogRef.current) {
-      closeSpecs();
-    }
+    if (e.target === specsDialogRef.current) closeSpecs();
+  };
+
+  const onLightboxBackdrop = (e) => {
+    if (e.target === e.currentTarget) closeLightbox();
   };
 
   return (
@@ -156,7 +180,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
 
       {product ? (
         <>
-          {/* ====== CARROUSEL ====== */}
+          {/* ===== CARROUSEL ===== */}
           <div
             className="productOverlay__carousel"
             role="region"
@@ -177,12 +201,15 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
                 style={{ transform: `translateX(-${current * 100}%)` }}
               >
                 {images.map((img, i) => (
-                  <div
-                    key={i}
-                    className="productOverlay__carousel-slide"
-                    aria-hidden={current !== i}
-                  >
-                    <img src={img.src} alt={img.alt || `${product.name} image ${i + 1}`} loading="lazy" />
+                  <div key={i} className="productOverlay__carousel-slide" aria-hidden={current !== i}>
+                    <button
+                      type="button"
+                      className="productOverlay__imgBtn"
+                      onClick={() => openLightbox(i)}
+                      aria-label={`Agrandir l'image ${i + 1}`}
+                    >
+                      <img src={img.src} alt={img.alt || `${product.name} image ${i + 1}`} loading="lazy" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -220,10 +247,9 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
               </>
             )}
           </div>
-          {/* ====== FIN CARROUSEL ====== */}
+          {/* ===== FIN CARROUSEL ===== */}
 
           <div className="productOverlay__description">
-                        {/* ====== LINK TO SPECS MODAL ====== */}
             {product?.specs?.length > 0 && (
               <button
                 type="button"
@@ -279,7 +305,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
             </div>
           </div>
 
-          {/* ====== SPECS MODAL ====== */}
+          {/* ===== SPECS MODAL ===== */}
           {isSpecsOpen && (
             <div
               className="productOverlay__specs-backdrop"
@@ -325,7 +351,112 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
               </div>
             </div>
           )}
-          {/* ====== FIN SPECS MODAL ====== */}
+          {/* ===== FIN SPECS MODAL ===== */}
+
+          {/* ===== LIGHTBOX en PORTAL ===== */}
+          {isLightboxOpen &&
+            createPortal(
+              (
+                <div
+                  className="lightbox"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={`Galerie — ${product.name}`}
+                  onMouseDown={onLightboxBackdrop}
+                  onTouchStart={onLightboxBackdrop}
+                >
+                  <button
+                    type="button"
+                    className="lightbox__close"
+                    aria-label="Fermer la galerie"
+                    onClick={closeLightbox}
+                  >
+                    <IoCloseCircleSharp aria-hidden="true" />
+                  </button>
+
+                  <div
+                    ref={lightboxViewportRef}
+                    className="lightbox__viewport"
+                    tabIndex={-1}
+                    onScroll={onLightboxScroll}
+                  >
+                    <div className="lightbox__track">
+                      {images.map((img, i) => (
+                        <figure key={i} className="lightbox__slide" aria-hidden={lightboxIndex !== i}>
+                          <img
+                            className="lightbox__img"
+                            src={img.src}
+                            alt={img.alt || `${product.name} image ${i + 1} agrandie`}
+                            draggable={false}
+                          />
+                          {img.alt && <figcaption className="lightbox__caption">{img.alt}</figcaption>}
+                        </figure>
+                      ))}
+                    </div>
+                  </div>
+
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="lightbox__arrow lightbox__arrow--prev"
+                        aria-label="Image précédente"
+                        onClick={() => {
+                          const vp = lightboxViewportRef.current;
+                          if (!vp) return;
+                          const total = images.length;
+                          const idx = ((lightboxIndex - 1) % total + total) % total;
+                          setLightboxIndex(idx);
+                          vp.scrollTo({ left: idx * vp.clientWidth, behavior: "smooth" });
+                        }}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        className="lightbox__arrow lightbox__arrow--next"
+                        aria-label="Image suivante"
+                        onClick={() => {
+                          const vp = lightboxViewportRef.current;
+                          if (!vp) return;
+                          const total = images.length;
+                          const idx = ((lightboxIndex + 1) % total + total) % total;
+                          setLightboxIndex(idx);
+                          vp.scrollTo({ left: idx * vp.clientWidth, behavior: "smooth" });
+                        }}
+                      >
+                        ›
+                      </button>
+
+                      <div className="lightbox__dots" role="tablist" aria-label="Sélecteur d'image">
+                        {images.map((_, i) => (
+                          <button
+                            key={i}
+                            className={`lightbox__dot ${i === lightboxIndex ? "isActive" : ""}`}
+                            role="tab"
+                            aria-selected={i === lightboxIndex}
+                            aria-label={`Aller à l'image ${i + 1}`}
+                            onClick={() => {
+                              const vp = lightboxViewportRef.current;
+                              if (!vp) return;
+                              setLightboxIndex(i);
+                              vp.scrollTo({ left: i * vp.clientWidth, behavior: "smooth" });
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="lightbox__counter" aria-live="polite">
+                        {lightboxIndex + 1} / {images.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ),
+              document.body
+            )
+          }
+          {/* ===== FIN LIGHTBOX ===== */}
         </>
       ) : (
         <div style={{ flex: 1 }} />

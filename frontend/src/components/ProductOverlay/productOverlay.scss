@@ -440,6 +440,129 @@ $product-default-color: #0095ff;
   }
 }
 
+/* Bouton invisible pour rendre l'image cliquable */
+.productOverlay__imgBtn {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  display: block;
+  width: 100%;
+  height: 100%;
+  img { display: block; width: 100%; height: auto; }
+}
+
+/* ===== LIGHTBOX ===== */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.96);
+  display: grid;
+  grid-template-areas: "viewport";
+  touch-action: pan-y pinch-zoom; /* laisse le zoom navigateur si besoin */
+
+  &__close {
+    position: absolute;
+    top: clamp(8px, 2vw, 16px);
+    right: clamp(8px, 2vw, 16px);
+    font-size: clamp(28px, 4vw, 40px);
+    color: #fff;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  &__viewport {
+    grid-area: viewport;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100vw;
+    height: 100vh;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    outline: none;
+  }
+
+  &__track {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+  }
+
+  &__slide {
+    scroll-snap-align: start;
+    flex: 0 0 100vw;
+    height: 100vh;
+    margin: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    place-items: center;
+  }
+
+  &__img {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none; /* évite les drag ghost */
+  }
+
+  &__caption {
+    color: rgba(255,255,255,0.75);
+    font-size: 12px;
+    padding: 8px 12px 18px;
+    text-align: center;
+  }
+
+  &__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    width: 44px; height: 44px;
+    font-size: 30px;
+    border-radius: 999px;
+    cursor: pointer;
+    z-index: 2;
+    &--prev { left: 8px; }
+    &--next { right: 8px; }
+  }
+
+  &__dots {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    display: flex; gap: 6px;
+    z-index: 2;
+  }
+
+  &__dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    border: 0;
+    background: rgba(255,255,255,0.4);
+    cursor: pointer;
+    &.isActive { background: #fff; }
+  }
+
+  &__counter {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    color: #fff;
+    font-size: 12px;
+    z-index: 2;
+    opacity: 0.9;
+  }
+}
+
+
 /* ---- Animations ---- */
 @keyframes fadeIn {
   from {
