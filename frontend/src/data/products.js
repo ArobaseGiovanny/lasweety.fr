@@ -1,5 +1,3 @@
-import pelucheRose from "../assets/peluches/peluche-rose-1.png";
-import pelucheMarron from "../assets/peluches/peluche-marron-1.png";
 import iconPelucheOrange from "../assets/icons/sweetyx-orange.png";
 import iconPelucheBleu from "../assets/icons/sweetyx-bleu.png";
 import iconPelucheRose from "../assets/icons/sweetyx-rose.png";
@@ -19,6 +17,23 @@ import pelucheBleuImg4 from "../assets/peluches/blue/img-4.png"
 import pelucheBleuDio from "../assets/peluches/blue/dio.png"
 import pelucheBleuLolo from "../assets/peluches/blue/lolo.png"
 import pelucheBleuDada from "../assets/peluches/blue/dada.png"
+
+import pelucheMarronImg1 from "../assets/peluches/brown/img-1.png"
+import pelucheMarronImg2 from "../assets/peluches/brown/img-2.png"
+import pelucheMarronImg3 from "../assets/peluches/brown/img-3.png"
+import pelucheMarronImg4 from "../assets/peluches/brown/img-4.png"
+import pelucheMarronDio from "../assets/peluches/brown/dio.png"
+import pelucheMarronLolo from "../assets/peluches/brown/lolo.png"
+import pelucheMarronDada from "../assets/peluches/brown/dada.png"
+
+import pelucheRoseImg1 from "../assets/peluches/pink/img-1.png"
+import pelucheRoseImg2 from "../assets/peluches/pink/img-2.png"
+import pelucheRoseImg3 from "../assets/peluches/pink/img-3.png"
+import pelucheRoseDio from "../assets/peluches/pink/dio.png"
+import pelucheRoseLolo from "../assets/peluches/pink/lolo.png"
+import pelucheRoseDada from "../assets/peluches/pink/dada.png"
+
+
 
 import pelucheVueOverall from "../assets/peluches/orange/overall-1.png"
 
@@ -67,7 +82,13 @@ const products = {
     description: "Un ourson rose qui fait fondre les cœurs 💙",
     icon: [{src: iconPelucheRose}],
     images: [
-      { src: pelucheRose, alt: "Sweetyx Rose vue 1" }
+      { src: pelucheRoseImg1, alt: "Peluche Sweetyx de couleur Rose vue de l'avant" },
+      { src: pelucheRoseImg2, alt: "Peluche Sweetyx de couleur Rose vue de l'arrière en zoom" },
+      { src: pelucheRoseImg3, alt: "Peluche Sweetyx de couleur Rose vue de l'avant sur le logo" },
+      { src: pelucheRoseDada, alt: "Peluche Sweetyx de couleur Rose dans les mains de Laurinda" },
+      { src: pelucheRoseDio, alt: "Peluche Sweetyx de couleur Rose dans les mains de Diolinda" },
+      { src: pelucheRoseLolo, alt: "Peluche Sweetyx de couleur Rose dans les mains de Lilow" },
+      { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur orange, bleue, rose et marron" },
     ],
   },
   104: {
@@ -78,7 +99,14 @@ const products = {
     description: "Un ourson marron qui fait fondre les cœurs 💙",
     icon: [{src: iconPelucheMarron}],
     images: [
-      { src: pelucheMarron, alt: "Sweetyx Marron vue 1" }
+      { src: pelucheMarronImg1, alt: "Peluche Sweetyx de couleur marron vue de l'avant" },
+      { src: pelucheMarronImg2, alt: "Peluche Sweetyx de couleur marron vue de l'arrière" },
+      { src: pelucheMarronImg3, alt: "Peluche Sweetyx de couleur marron vue de l'arrière en zoom" },
+      { src: pelucheMarronImg4, alt: "Peluche Sweetyx de couleur marron vue de l'avant sur le logo" },
+      { src: pelucheMarronDada, alt: "Peluche Sweetyx de couleur marron dans les mains de Laurinda" },
+      { src: pelucheMarronDio, alt: "Peluche Sweetyx de couleur marron dans les mains de Diolinda" },
+      { src: pelucheMarronLolo, alt: "Peluche Sweetyx de couleur marron dans les mains de Lilow" },
+      { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur bleu, bleue, rose et marron" },
     ],
   },
 };
