@@ -11,6 +11,48 @@ const esc = (v) =>
 
 const joinNonEmpty = (arr, sep = ", ") => arr.filter(Boolean).join(sep);
 
+// --- Helpers de normalisation --- //
+const normalizeAddress = (raw = {}) => {
+  // essaie plusieurs chemins/notations possibles
+  const a =
+    raw?.address ||
+    raw?.shippingAddress ||
+    raw?.shipping ||
+    raw?.deliveryAddress ||
+    raw?.billingAddress || // fallback sur billing
+    raw ||
+    {};
+
+  const line1 =
+    a.line1 || a.address_line1 || a.address1 || a.street1 || a.street || a.address;
+  const line2 = a.line2 || a.address_line2 || a.address2 || a.street2 || a.complement;
+  const city = a.city || a.locality || a.town || a.ville;
+  const postal =
+    a.postal_code || a.postcode || a.postalCode || a.zip || a.cp || a.codePostal;
+  const country = a.country || a.country_code || a.countryCode || a.pays;
+
+  return { line1, line2, city, postal, country };
+};
+
+const normalizePickup = (raw = {}) => {
+  const p =
+    raw?.pickupPoint ||
+    raw?.pickup ||
+    raw?.relay ||
+    raw ||
+    {};
+
+  const name = p.name || p.label || p.title;
+  const address =
+    p.address ||
+    joinNonEmpty([p.line1 || p.address_line1, p.line2 || p.address_line2]);
+  const city = p.city || p.locality || p.town;
+  const zip = p.zip || p.postal_code || p.postcode || p.postalCode;
+
+  return { name, address, city, zip };
+};
+/* --- fin helpers --- */
+
 /**
  * Template d'email de confirmation de commande
  * @param {Object} order - Document Order en BDD
@@ -47,13 +89,15 @@ export function orderConfirmationTemplate(order, opts = {}) {
 
   // Livraison
   const isPickup = order.deliveryMode === "pickup";
-  // ⬇️ Fallback sur billingAddress si shippingAddress absent
-  const ship = order.shippingAddress || order.billingAddress || {};
-  const pickup = order.pickupPoint || {};
 
-  // Si pickup est sélectionné ET qu'on a des infos pickup → afficher le relais,
-  // sinon on affiche l'adresse de livraison (ou facturation en fallback).
+  // Normalisation adresses
+  const ship = normalizeAddress(
+    order.shippingAddress || order.shipping || order.deliveryAddress || order.billingAddress || {}
+  );
+  const pickup = normalizePickup(order.pickupPoint || order.pickup || {});
+
   const hasPickupInfo = isPickup && (pickup.name || pickup.address || pickup.city || pickup.zip);
+
   const deliveryInfo = hasPickupInfo
     ? joinNonEmpty(
         [
@@ -66,7 +110,7 @@ export function orderConfirmationTemplate(order, opts = {}) {
         [
           ship.line1,
           ship.line2,
-          joinNonEmpty([ship.postal_code, ship.city], " "),
+          joinNonEmpty([ship.postal, ship.city], " "),
           ship.country,
         ].map(esc)
       );
@@ -105,7 +149,7 @@ export function orderConfirmationTemplate(order, opts = {}) {
           </td>
         </tr>`;
 
-  // Totaux (si tu veux détailler plus tard : sous-total, livraison, etc.)
+  // Totaux
   const total = fmtPrice(order.total || 0);
   const shippingLabel = hasPickupInfo ? "Point relais Chronopost" : "Livraison à domicile";
   const shippingCost = fmtPrice(0); // gratuit pour l’instant (modifiable)
@@ -116,12 +160,13 @@ export function orderConfirmationTemplate(order, opts = {}) {
       ? `${SUCCESS_BASE_URL}?session_id=${encodeURIComponent(order.stripeSessionId)}`
       : "";
 
-  // Astuce UX pickup
+  // Note pickup
   const pickupNote = hasPickupInfo
     ? `<p style="margin:8px 0 0 0; color:#666;">
          Vous recevrez un e-mail/SMS du transporteur dès l’arrivée du colis au point relais.
        </p>`
     : "";
+    
 
   return `
   <div style="background:#f6f7fb; padding:24px 12px;">
