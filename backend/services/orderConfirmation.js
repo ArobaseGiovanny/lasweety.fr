@@ -47,10 +47,14 @@ export function orderConfirmationTemplate(order, opts = {}) {
 
   // Livraison
   const isPickup = order.deliveryMode === "pickup";
-  const ship = order.shippingAddress || {};
+  // ⬇️ Fallback sur billingAddress si shippingAddress absent
+  const ship = order.shippingAddress || order.billingAddress || {};
   const pickup = order.pickupPoint || {};
 
-  const deliveryInfo = isPickup
+  // Si pickup est sélectionné ET qu'on a des infos pickup → afficher le relais,
+  // sinon on affiche l'adresse de livraison (ou facturation en fallback).
+  const hasPickupInfo = isPickup && (pickup.name || pickup.address || pickup.city || pickup.zip);
+  const deliveryInfo = hasPickupInfo
     ? joinNonEmpty(
         [
           pickup.name,
@@ -103,7 +107,7 @@ export function orderConfirmationTemplate(order, opts = {}) {
 
   // Totaux (si tu veux détailler plus tard : sous-total, livraison, etc.)
   const total = fmtPrice(order.total || 0);
-  const shippingLabel = isPickup ? "Point relais Chronopost" : "Livraison à domicile";
+  const shippingLabel = hasPickupInfo ? "Point relais Chronopost" : "Livraison à domicile";
   const shippingCost = fmtPrice(0); // gratuit pour l’instant (modifiable)
 
   // CTA vers la page succès (si paramétrée)
@@ -113,7 +117,7 @@ export function orderConfirmationTemplate(order, opts = {}) {
       : "";
 
   // Astuce UX pickup
-  const pickupNote = isPickup
+  const pickupNote = hasPickupInfo
     ? `<p style="margin:8px 0 0 0; color:#666;">
          Vous recevrez un e-mail/SMS du transporteur dès l’arrivée du colis au point relais.
        </p>`
@@ -164,7 +168,7 @@ export function orderConfirmationTemplate(order, opts = {}) {
 
         <!-- Livraison -->
         <div style="margin-top:18px; padding:14px; background:#fafafa; border:1px solid #eee; border-radius:10px;">
-          <p style="margin:0 0 6px 0;"><strong>${isPickup ? "Point relais" : "Adresse de livraison"}</strong></p>
+          <p style="margin:0 0 6px 0;"><strong>${hasPickupInfo ? "Point relais" : "Adresse de livraison"}</strong></p>
           <p style="margin:0;">${deliveryInfo || "<em>Adresse non disponible</em>"}</p>
           ${pickupNote}
         </div>
