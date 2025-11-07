@@ -131,10 +131,10 @@ function CartOverlay({ isOpen, onClose }) {
     }
   };
 
-  // Validation code postal FR (simple)
+
   const isValidPostal = (cp) => /^[0-9]{5}$/.test((cp || "").trim());
 
-  // Continuer → ouvrir la carte centrée sur le CP
+
   const continueWithPostal = async () => {
     if (!isValidPostal(postalCode)) {
       setPostalError("Entre un code postal valide (5 chiffres).");
@@ -143,25 +143,6 @@ function CartOverlay({ isOpen, onClose }) {
     setPostalError("");
     setShowPostalModal(false);
     await openSendcloudPicker({ postalCode });
-  };
-
-  // Utiliser la position (optionnel)
-  const continueWithGeoloc = async () => {
-    if (!navigator.geolocation) {
-      setPostalError("La géolocalisation n'est pas disponible.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        setPostalError("");
-        setShowPostalModal(false);
-        await openSendcloudPicker({ coords: pos.coords });
-      },
-      () => {
-        setPostalError("Autorise la géolocalisation ou saisis un code postal.");
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
   };
 
   return (
@@ -277,14 +258,7 @@ function CartOverlay({ isOpen, onClose }) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <button
-                style={{
-                  padding: "0.9rem",
-                  borderRadius: "10px",
-                  border: "none",
-                  backgroundColor: "#111",
-                  color: "white",
-                  cursor: "pointer",
-                }}
+                className="cartOverlay__zipcode"
                 onClick={() => {
                   setDeliveryMode("home");
                   setPickupPoint(null);
@@ -292,7 +266,7 @@ function CartOverlay({ isOpen, onClose }) {
                   handleCheckout("home", null);
                 }}
               >
-                Livraison à domicile
+                🏠 Livraison à domicile
               </button>
 
               <button
@@ -309,7 +283,7 @@ function CartOverlay({ isOpen, onClose }) {
                   setShowPostalModal(true); // 👉 on demande le code postal
                 }}
               >
-                Point relais Chronopost
+                📦 Point relais Chronopost
               </button>
             </div>
 
@@ -401,19 +375,6 @@ function CartOverlay({ isOpen, onClose }) {
                 }}
               >
                 Continuer
-              </button>
-              <button
-                onClick={continueWithGeoloc}
-                style={{
-                  flex: 1,
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #111",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Utiliser ma position
               </button>
             </div>
 
