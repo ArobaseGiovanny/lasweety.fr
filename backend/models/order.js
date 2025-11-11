@@ -25,6 +25,8 @@ const orderSchema = new mongoose.Schema({
     packageType: String,  // "SMALL" | "LARGE"
   },
 
+  
+
   total: Number,
   customerPhone: String, 
   customerEmail: String,
@@ -63,6 +65,9 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "processing", "paid", "canceled", "refunded"],
     default: "pending",
   },
+
+    nvoiceNumber: { type: String, unique: true, sparse: true },
+    invoiceFile:   { type: String }, 
   
 
   emailSent: { type: Boolean, default: false },
