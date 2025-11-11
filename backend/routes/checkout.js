@@ -349,7 +349,6 @@ router.post("/webhook", async (req, res) => {
             siret: process.env.COMPANY_SIRET,
             vatNumber: process.env.COMPANY_VAT_NUMBER,
             email: process.env.SUPPORT_EMAIL,
-            // logoBuffer: fs.readFileSync("assets/logo.png"), // optionnel
           });
 
           // --- (3) Envoie l'email avec la facture en PJ ---
