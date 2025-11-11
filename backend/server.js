@@ -6,14 +6,16 @@ import mongoose from "mongoose";
 
 import adminRoutes from "./routes/admin.js";
 import checkoutRoutes from "./routes/checkout.js";
-import testMailRouter from "./routes/testMail.js";
 import chronopostRouter from "./routes/chronopost.js";
 
-const envFile = process.env.APP_ENV === "live" ? ".env.live" : ".env";
+import dotenv from "dotenv";
+
+const appEnv = process.env.APP_ENV || "test";
+const envFile = appEnv === "live" ? ".env.live" : ".env";
 
 dotenv.config({ path: envFile, override: true });
 
-console.log(`[ENV] Chargé: ${envFile} (APP_ENV=${process.env.APP_ENV || "test"})`);
+console.log(`[ENV] Chargé: ${envFile} (APP_ENV=${appEnv})`);
 
 
 const app = express();
@@ -70,7 +72,6 @@ app.options(/.*/, cors(corsOptions));
  * ───────────────────────────────────────────────────────── */
 app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
-app.use("/api", testMailRouter);
 app.use("/api/chronopost", chronopostRouter);
 
 
