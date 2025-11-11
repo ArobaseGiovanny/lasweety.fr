@@ -351,6 +351,22 @@ router.post("/webhook", async (req, res) => {
             email: process.env.SUPPORT_EMAIL,
           });
 
+                    // --- Sauvegarde locale de la facture ---
+          const invoicesDir = "/var/www/lasweety/backend/storage/invoices";
+          const yearDir = path.join(invoicesDir, String(new Date().getFullYear()));
+          fs.mkdirSync(yearDir, { recursive: true });
+
+          const fileName = `FACTURE-${invoiceNumber}.pdf`;
+          const filePath = path.join(yearDir, fileName);
+
+          // écrit le PDF sur disque
+          fs.writeFileSync(filePath, pdfBuffer);
+
+          await Order.updateOne(
+            { _id: created._id },
+            { $set: { invoiceFile: `storage/invoices/${new Date().getFullYear()}/${fileName}` } }
+          );
+
           // --- (3) Envoie l'email avec la facture en PJ ---
           await sendMail({
             to: freshOrder.customerEmail,
