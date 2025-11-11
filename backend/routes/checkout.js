@@ -8,6 +8,8 @@ import { sendMail } from "../services/mailer.js";
 import { orderConfirmationTemplate } from "../services/orderConfirmation.js";
 import { PACKAGING, selectPackaging } from "../config/shipping.js";
 import { generateInvoicePdfBuffer } from "../services/invoicePdf.js";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
