@@ -11,21 +11,6 @@ import chronopostRouter from "./routes/chronopost.js";
 
 dotenv.config({ override: true });
 
-/* ─────────────────────────────────────────────────────────
- * Boot logs (masqués) pour valider le chargement du .env
- * ───────────────────────────────────────────────────────── */
-console.log("[BOOT] NODE_ENV:", process.env.NODE_ENV || "(not set)");
-console.log("[BOOT] PORT:", process.env.PORT || "(not set)");
-console.log("[BOOT] FRONTEND_URL:", process.env.FRONTEND_URL || "(not set)");
-console.log(
-  "[BOOT] STRIPE_SECRET_KEY:",
-  (process.env.STRIPE_SECRET_KEY || "").slice(0, 10) + (process.env.STRIPE_SECRET_KEY ? "…" : "")
-);
-console.log(
-  "[BOOT] STRIPE_WEBHOOK_SECRET:",
-  (process.env.STRIPE_WEBHOOK_SECRET || "").slice(0, 10) + (process.env.STRIPE_WEBHOOK_SECRET ? "…" : "")
-);
-
 const app = express();
 
 /* ─────────────────────────────────────────────────────────
@@ -96,16 +81,6 @@ app.use("/api/chronopost", chronopostRouter);
  * ───────────────────────────────────────────────────────── */
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// ❗ Route de debug temporaire. Retire-la en prod si tu veux.
-app.get("/env-check", (_req, res) => {
-  res.json({
-    FRONTEND_URL: process.env.FRONTEND_URL || null,
-    STRIPE_SECRET_KEY: (process.env.STRIPE_SECRET_KEY || "").slice(0, 10) + "…",
-    STRIPE_WEBHOOK_SECRET: (process.env.STRIPE_WEBHOOK_SECRET || "").slice(0, 10) + "…",
-    MAILER_MODE: process.env.MAILER_MODE || null,
-  });
-});
-
 /* ─────────────────────────────────────────────────────────
  * Error handler global JSON
  * ───────────────────────────────────────────────────────── */
@@ -119,7 +94,6 @@ app.use((err, _req, res, _next) => {
  * ───────────────────────────────────────────────────────── */
 const mongoUriShown =
   (process.env.MONGO_URI || "").replace(/(mongodb(\+srv)?:\/\/)([^:]+):([^@]+)@/i, "$1***:***@");
-console.log("[MONGO] connecting:", mongoUriShown || "(not set)");
 
 mongoose
   .connect(process.env.MONGO_URI)

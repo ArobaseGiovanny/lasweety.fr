@@ -2,12 +2,10 @@ import "../Cart/cartOverlay.scss";
 import { useCart } from "../../context/CartContext";
 import products from "../../data/products";
 import { IoCloseCircleSharp } from "react-icons/io5";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const SENDCLOUD_PUBLIC_KEY = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
-
-const MAX_ITEMS = 4;
 
 // Charge le script Sendcloud si non présent (fallback si tu n'as pas mis la balise dans index.html)
 function ensureSPPScript() {
@@ -35,7 +33,14 @@ function totalQty(list) {
 }
 
 function CartOverlay({ isOpen, onClose }) {
-  const { cart, totalPrice, removeFromCart, updateQuantity } = useCart();
+  const {
+    cart,
+    totalPrice,
+    removeFromCart,
+    updateQuantity,   // ⚠️ retourne true/false avec le nouveau CartContext
+    CART_MAX_ITEMS,   // plafond global (4)
+  } = useCart();
+
   const [startY, setStartY] = useState(null);
   const [translateY, setTranslateY] = useState(0);
 
@@ -45,13 +50,32 @@ function CartOverlay({ isOpen, onClose }) {
   // eslint-disable-next-line no-unused-vars
   const [pickupPoint, setPickupPoint] = useState(null);   // { id, name, address, zip, city, ... }
 
-  // NEW: pop-up code postal
+  // pop-up code postal
   const [showPostalModal, setShowPostalModal] = useState(false);
   const [postalCode, setPostalCode] = useState("");
   const [postalError, setPostalError] = useState("");
 
   // UI error banner
   const [uiError, setUiError] = useState("");
+
+  // 🔄 Effet: montre/retire l'avertissement automatiquement si > MAX
+  useEffect(() => {
+    const qty = totalQty(cart);
+    if (qty > CART_MAX_ITEMS) {
+      setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
+    } else if (uiError) {
+      setUiError("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart]);
+
+  // helper de mise à jour protégée (utilise le booléen retourné par updateQuantity)
+  function setQuantitySafe(id, newQty) {
+    const ok = updateQuantity(id, newQty);
+    if (!ok) {
+      setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
+    }
+  }
 
   // Swipe mobile
   const handleTouchStart = (e) => setStartY(e.touches[0].clientY);
@@ -72,8 +96,8 @@ function CartOverlay({ isOpen, onClose }) {
     try {
       // garde-fou local avant appel backend
       const qty = totalQty(cart);
-      if (qty > MAX_ITEMS) {
-        setUiError(`Quantité maximale: ${MAX_ITEMS} articles par commande.`);
+      if (qty > CART_MAX_ITEMS) {
+        setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
         return;
       }
 
@@ -112,8 +136,8 @@ function CartOverlay({ isOpen, onClose }) {
   const handleOrderClick = () => {
     const qty = totalQty(cart);
     if (qty === 0) return;
-    if (qty > MAX_ITEMS) {
-      setUiError(`Quantité maximale: ${MAX_ITEMS} articles par commande.`);
+    if (qty > CART_MAX_ITEMS) {
+      setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
       return;
     }
     setShowDeliveryChoice(true);
@@ -161,13 +185,11 @@ function CartOverlay({ isOpen, onClose }) {
           handleCheckout("pickup", p);
         },
         // onError
-        (error) => {
-          console.error("Sendcloud picker error:", error);
+        () => {
           setUiError("Impossible d’ouvrir la carte des points relais. Réessaie plus tard.");
         }
       );
-    } catch (err) {
-      console.error("Impossible de charger le script Sendcloud SPP :", err);
+    } catch {
       setUiError("Chargement du module points relais échoué.");
     }
   };
@@ -209,33 +231,8 @@ function CartOverlay({ isOpen, onClose }) {
 
         {/* Bannière d'erreur UI */}
         {uiError && (
-          <div
-            style={{
-              background: "#fff3cd",
-              color: "#664d03",
-              border: "1px solid #ffecb5",
-              padding: "10px 12px",
-              borderRadius: 8,
-              margin: "10px 0",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
+          <div className="cartOverlay__error-cart-length">
             <span style={{ fontSize: 14 }}>{uiError}</span>
-            <button
-              onClick={() => setUiError("")}
-              style={{
-                border: "none",
-                background: "transparent",
-                color: "#664d03",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              OK
-            </button>
           </div>
         )}
 
@@ -265,19 +262,11 @@ function CartOverlay({ isOpen, onClose }) {
                     </div>
 
                     <div className="cartOverlay__actions">
-                      <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}>
+                      <button onClick={() => setQuantitySafe(item.id, Math.max(1, item.quantity - 1))}>
                         -
                       </button>
                       <span>{item.quantity}</span>
-                      <button
-                        onClick={() => {
-                          if (totalQty(cart) >= MAX_ITEMS) {
-                            setUiError(`Quantité maximale atteinte (${MAX_ITEMS} articles).`);
-                            return;
-                          }
-                          updateQuantity(item.id, item.quantity + 1);
-                        }}
-                      >
+                      <button onClick={() => setQuantitySafe(item.id, item.quantity + 1)}>
                         +
                       </button>
                     </div>
@@ -295,31 +284,14 @@ function CartOverlay({ isOpen, onClose }) {
           </ul>
         )}
 
-        {/* Hint max atteint */}
-        {cart.length > 0 && totalQty(cart) === MAX_ITEMS && (
-          <div
-            style={{
-              background: "#eef6ff",
-              color: "#0b5ed7",
-              border: "1px solid #cfe2ff",
-              padding: "8px 10px",
-              borderRadius: 8,
-              marginTop: 8,
-              fontSize: 13,
-            }}
-          >
-            Quantité maximale atteinte ({MAX_ITEMS} articles).
-          </div>
-        )}
-
         {cart.length > 0 && (
           <div className="cartOverlay__footer">
             <p>Total : {totalPrice.toFixed(2)} €</p>
             <button
               className="cartOverlay__checkout"
               onClick={handleOrderClick}
-              disabled={totalQty(cart) > MAX_ITEMS}
-              style={totalQty(cart) > MAX_ITEMS ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+              disabled={totalQty(cart) > CART_MAX_ITEMS}
+              style={totalQty(cart) > CART_MAX_ITEMS ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
             >
               Passer la commande
             </button>
@@ -453,7 +425,7 @@ function CartOverlay({ isOpen, onClose }) {
                 marginTop: 12,
                 padding: "10px 12px",
                 borderRadius: 10,
-                border: "1px solid #ddd",
+                border: "1px solid " + (postalError ? "crimson" : "#ddd"),
                 fontSize: 16,
                 textAlign: "center",
                 letterSpacing: 1,

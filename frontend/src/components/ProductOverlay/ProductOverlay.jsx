@@ -4,12 +4,24 @@ import { createPortal } from "react-dom";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { useCart } from "../../context/CartContext";
 
+function totalQty(list) {
+  return Array.isArray(list)
+    ? list.reduce((s, it) => s + Math.max(1, Number(it.quantity) || 1), 0)
+    : 0;
+}
+
 function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
+  const {
+    addToCart,    // ⚠️ doit renvoyer true/false (voir CartContext fourni)
+    cart,
+    CART_MAX_ITEMS, // plafonné à 4
+  } = useCart();
+
   const [startY, setStartY] = useState(null);
   const [translateY, setTranslateY] = useState(0);
 
-  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [uiError, setUiError] = useState("");
 
   // ===== SPECS MODAL =====
   const [isSpecsOpen, setIsSpecsOpen] = useState(false);
@@ -90,29 +102,59 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
     setStartY(null);
   };
 
-  const increaseQuantity = () => setQuantity((q) => q + 1);
+  // ===== QUOTAS PANIER =====
+  const cartQty = totalQty(cart);
+  const remaining = Math.max(0, CART_MAX_ITEMS - cartQty); // combien on peut encore ajouter
+
+  // Efface l'erreur si on repasse sous la limite
+  useEffect(() => {
+    if (cartQty <= CART_MAX_ITEMS && uiError) setUiError("");
+  }, [cartQty, CART_MAX_ITEMS, uiError]);
+
+  const increaseQuantity = () => {
+    // on n'autorise pas de quantité locale > remaining
+    if (remaining <= 0) {
+      setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
+      return;
+    }
+    setQuantity((q) => {
+      const next = q + 1;
+      if (next > remaining) {
+        setUiError(`Il reste ${remaining} article${remaining > 1 ? "s" : ""} possible${remaining > 1 ? "s" : ""}.`);
+        return remaining;
+      }
+      return next;
+    });
+  };
+
   const decreaseQuantity = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
+
   const totalPrice = product ? product.price * quantity : 0;
 
   const handleAddToCart = () => {
     if (!product) return;
-    const item = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity,
-      subtotal: (product.price * quantity).toFixed(2),
-    };
-    const stripeItem = {
-      price_data: {
-        currency: "eur",
-        product_data: { name: product.name },
-        unit_amount: Math.round(product.price * 100),
-      },
-      quantity,
-    };
-    console.log(item, stripeItem);
-    addToCart(product, quantity);
+
+    if (remaining <= 0) {
+      setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
+      return;
+    }
+
+    // on limite la quantité ajoutée à ce qui reste possible
+    const toAdd = Math.min(quantity, remaining);
+
+    const ok = addToCart(product, toAdd); // CartContext refusera si ça dépasse
+    if (!ok) {
+      setUiError(`Quantité maximale: ${CART_MAX_ITEMS} articles par commande.`);
+      return;
+    }
+
+    // Si la quantité demandée > possible, informer l'utilisateur
+    if (quantity > toAdd) {
+      setUiError(`Ajout limité à ${toAdd} (maximum ${CART_MAX_ITEMS} articles par commande).`);
+    } else {
+      setUiError("");
+    }
+
     onClose();
   };
 
@@ -165,6 +207,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
       className={`productOverlay ${product ? product.color : ""} ${isOpen ? "isOpen" : ""}`}
       style={{ transform: isOpen ? `translateY(${translateY}px)` : undefined }}
     >
+      {/* swipe hint */}
       <div
         className="productOverlay__scroll-hint"
         onTouchStart={handleTouchStart}
@@ -177,6 +220,13 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
       <div className="productOverlay__close">
         <IoCloseCircleSharp onClick={onClose} />
       </div>
+
+      {/* bannière erreur panier */}
+      {uiError && (
+        <div className="productOverlay__error" role="alert">
+          {uiError}
+        </div>
+      )}
 
       {product ? (
         <>
@@ -290,6 +340,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
                   className="productOverlay__quantity-btn productOverlay__quantity-btn--plus"
                   aria-label="Augmenter la quantité"
                   onClick={increaseQuantity}
+                  disabled={remaining <= 0 || quantity >= remaining}
                 >
                   +
                 </button>
@@ -297,10 +348,19 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
               <data className="productOverlay__price" value={totalPrice.toFixed(2)}>
                 {totalPrice.toFixed(2)} €
               </data>
+              {remaining <= 2 && (
+                <p className="productOverlay__remaining">
+                  {remaining > 0
+                    ? `Il reste ${remaining} article${remaining > 1 ? "s" : ""} possible${remaining > 1 ? "s" : ""}.`
+                    : `Limite du panier atteinte (${CART_MAX_ITEMS}).`}
+                </p>
+              )}
             </div>
 
             <div className="productOverlay__add-to-cart">
-              <button onClick={handleAddToCart}>Ajouter au panier</button>
+              <button onClick={handleAddToCart} disabled={remaining <= 0}>
+                Ajouter au panier
+              </button>
               <p>Livraison offerte.</p>
             </div>
           </div>
