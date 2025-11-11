@@ -62,7 +62,7 @@ const normalizePickup = (raw = {}) => {
 export function orderConfirmationTemplate(order, opts = {}) {
   // Marque & liens (fallback sur .env sinon valeurs par défaut)
   const BRAND = opts.brandName || process.env.BRAND_NAME || "La Sweety";
-  const SUPPORT_EMAIL = opts.supportEmail || process.env.SUPPORT_EMAIL || "support@lasweety.com";
+  const SUPPORT_EMAIL = opts.supportEmail || process.env.SUPPORT_EMAIL || "contact@lasweety.com";
   const COMPANY_NAME = opts.companyName || process.env.COMPANY_NAME || BRAND;
   const COMPANY_ADDRESS_LINE1 = opts.companyAddressLine1 || process.env.COMPANY_ADDRESS_LINE1 || "";
   const COMPANY_ADDRESS_LINE2 = opts.companyAddressLine2 || process.env.COMPANY_ADDRESS_LINE2 || "";

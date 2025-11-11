@@ -7,6 +7,7 @@ import Product from "../models/product.js";
 import { sendMail } from "../services/mailer.js";
 import { orderConfirmationTemplate } from "../services/orderConfirmation.js";
 import { PACKAGING, selectPackaging } from "../config/shipping.js";
+import { generateInvoicePdfBuffer } from "../services/invoicePdf.js";
 
 dotenv.config();
 
@@ -315,6 +316,10 @@ router.post("/webhook", async (req, res) => {
         return res.json({ received: true });
       }
 
+      const year = new Date().getFullYear();
+      const invoiceNumber = `${year}-${created._id}`;
+      await Order.updateOne({ _id: created._id }, { $set: { invoiceNumber } });
+
       // Email (idempotent)
       try {
         const claim = await Order.updateOne(
@@ -326,10 +331,39 @@ router.post("/webhook", async (req, res) => {
         if (claim.modifiedCount === 1) {
           const freshOrder = await Order.findById(created._id).lean();
           const html = orderConfirmationTemplate(freshOrder);
+          // --- (1) Assure un numéro de facture ---
+          const year = new Date().getFullYear();
+          const invoiceNumber =
+            freshOrder.invoiceNumber ||
+            freshOrder.orderNumber ||
+            `${year}-${freshOrder._id}`;
+
+          // --- (2) Génère le PDF en mémoire ---
+          const pdfBuffer = await generateInvoicePdfBuffer(freshOrder, {
+            name: process.env.COMPANY_NAME || "La Sweety",
+            addressLines: [
+              process.env.COMPANY_ADDRESS_LINE1,
+              process.env.COMPANY_ADDRESS_LINE2,
+              `${process.env.COMPANY_POSTAL_CODE || ""} ${process.env.COMPANY_CITY || ""} ${process.env.COMPANY_COUNTRY || "FR"}`
+            ].filter(Boolean),
+            siret: process.env.COMPANY_SIRET,
+            vatNumber: process.env.COMPANY_VAT_NUMBER,
+            email: process.env.SUPPORT_EMAIL,
+            // logoBuffer: fs.readFileSync("assets/logo.png"), // optionnel
+          });
+
+          // --- (3) Envoie l'email avec la facture en PJ ---
           await sendMail({
             to: freshOrder.customerEmail,
-            subject: `Confirmation de commande ${freshOrder.orderNumber}`,
+            subject: `Confirmation de commande ${freshOrder.orderNumber} – Facture en pièce jointe`,
             html,
+            attachments: [
+              {
+                filename: `FACTURE-${invoiceNumber}.pdf`,
+                content: pdfBuffer,
+                contentType: "application/pdf",
+              },
+            ],
           });
           console.log("[WH] confirmation email sent to:", freshOrder.customerEmail);
         } else {

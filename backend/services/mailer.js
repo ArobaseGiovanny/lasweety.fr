@@ -38,7 +38,7 @@ async function ensureTransporter() {
   return transporter;
 }
 
-export async function sendMail({ to, subject, html, text, replyTo }) {
+export async function sendMail({ to, subject, html, text, replyTo, attachments = [] }) {
   const t = await ensureTransporter();
 
   const from = process.env.FROM_EMAIL || "La Sweety <no-reply@lasweety.com>";
@@ -53,7 +53,7 @@ export async function sendMail({ to, subject, html, text, replyTo }) {
       .replace(/\s+/g, " ")
       .trim();
 
-  const info = await t.sendMail({ from, to, subject, html, text: plain, replyTo: reply });
+  const info = await t.sendMail({ from, to, subject, html, text: plain, replyTo: reply, attachments });
 
   // En mode test, on logge le lien d’aperçu
   if (modeLabel === "ethereal") {
