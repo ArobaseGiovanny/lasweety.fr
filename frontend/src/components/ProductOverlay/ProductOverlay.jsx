@@ -351,7 +351,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
               {remaining <= 2 && (
                 <p className="productOverlay__remaining">
                   {remaining > 0
-                    ? `Il reste ${remaining} article${remaining > 1 ? "s" : ""} possible${remaining > 1 ? "s" : ""}.`
+                    ? `Vous pouvez encore ajouter ${remaining} article${remaining > 1 ? "s" : ""} dans cette commande`
                     : `Limite du panier atteinte (${CART_MAX_ITEMS}).`}
                 </p>
               )}
