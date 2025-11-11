@@ -7,6 +7,7 @@ import CartOverlay from "./components/Cart/CartOverlay";
 import { useState } from "react";
 import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminLogin from "./pages/LoginAdmin/AdminLogin";
+import About from "./pages/About/about"
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -24,6 +25,7 @@ function App() {
         <Route path="/cancel" element={<CancelPage />} />
         <Route path="/" element={<PeluchesPage />} />
         <Route path="/peluches" element={<PeluchesPage />} />
+        <Route path="/about" element={<About />} />
 
         {/* Login Admin */}
         <Route

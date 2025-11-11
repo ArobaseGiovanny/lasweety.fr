@@ -53,26 +53,27 @@ function Navbar({ onCartClick }) {
       >
         <ul>
           <li>
-            <Link to="/">Accueil</Link>
+            <Link to="/" onClick={() => setIsOpen(false)}>Accueil</Link>
           </li>
           <li>
             <button
               className="navbar__menu-cart"
               onClick={() => {
-                setIsOpen(false); // 👈 fermer le menu
-                onCartClick(); // 👈 ouvrir le panier
+                setIsOpen(false);
+                onCartClick();
               }}
             >
               Panier
             </button>
           </li>
           <li>
-            <Link to="/contact">Suivez-nous</Link>
+            <Link to="/contact" onClick={() => setIsOpen(false)}>Suivez-nous</Link>
           </li>
           <li>
-            <Link to="/a-propos">Mentions légales</Link>
+            <Link to="/about" onClick={() => setIsOpen(false)}>Mentions légales</Link>
           </li>
         </ul>
+
       </div>
     </nav>
   );
