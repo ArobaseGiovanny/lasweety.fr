@@ -9,11 +9,11 @@ import checkoutRoutes from "./routes/checkout.js";
 import testMailRouter from "./routes/testMail.js";
 import chronopostRouter from "./routes/chronopost.js";
 
-dotenv.config({ override: true });
-
 const envFile = process.env.APP_ENV === "live" ? ".env.live" : ".env";
-dotenv.config({ path: envFile });
-console.log(`[ENV] Chargé: ${envFile}`);
+
+dotenv.config({ path: envFile, override: true });
+
+console.log(`[ENV] Chargé: ${envFile} (APP_ENV=${process.env.APP_ENV || "test"})`);
 
 
 const app = express();
