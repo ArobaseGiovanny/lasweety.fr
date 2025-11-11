@@ -7,6 +7,8 @@ import { useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL;
 const SENDCLOUD_PUBLIC_KEY = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
 
+const MAX_ITEMS = 4;
+
 // Charge le script Sendcloud si non présent (fallback si tu n'as pas mis la balise dans index.html)
 function ensureSPPScript() {
   return new Promise((resolve, reject) => {
@@ -26,6 +28,12 @@ function ensureSPPScript() {
   });
 }
 
+function totalQty(list) {
+  return Array.isArray(list)
+    ? list.reduce((s, it) => s + Math.max(1, Number(it.quantity) || 1), 0)
+    : 0;
+}
+
 function CartOverlay({ isOpen, onClose }) {
   const { cart, totalPrice, removeFromCart, updateQuantity } = useCart();
   const [startY, setStartY] = useState(null);
@@ -42,6 +50,9 @@ function CartOverlay({ isOpen, onClose }) {
   const [postalCode, setPostalCode] = useState("");
   const [postalError, setPostalError] = useState("");
 
+  // UI error banner
+  const [uiError, setUiError] = useState("");
+
   // Swipe mobile
   const handleTouchStart = (e) => setStartY(e.touches[0].clientY);
   const handleTouchMove = (e) => {
@@ -56,9 +67,16 @@ function CartOverlay({ isOpen, onClose }) {
     setStartY(null);
   };
 
-    // Stripe checkout
-    const handleCheckout = async (mode, point = null) => {
+  // Stripe checkout (avec gestion d'erreurs UI)
+  const handleCheckout = async (mode, point = null) => {
     try {
+      // garde-fou local avant appel backend
+      const qty = totalQty(cart);
+      if (qty > MAX_ITEMS) {
+        setUiError(`Quantité maximale: ${MAX_ITEMS} articles par commande.`);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/checkout/create-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,22 +86,45 @@ function CartOverlay({ isOpen, onClose }) {
           pickupPoint: point, // null si domicile
         }),
       });
+
+      if (!response.ok) {
+        let msg = "Une erreur est survenue.";
+        try {
+          const data = await response.json();
+          msg = data?.error || msg;
+        } catch {msg}
+        setUiError(msg);
+        return;
+      }
+
       const data = await response.json();
-      if (data.url) window.location.href = data.url;
-      else console.error("Pas d’URL Stripe dans la réponse :", data);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setUiError("Pas d’URL de paiement reçue. Réessaie dans quelques instants.");
+      }
     } catch (err) {
       console.error("Erreur lors du checkout :", err);
+      setUiError("Connexion au serveur impossible. Vérifie ta connexion et réessaie.");
     }
   };
 
-  const handleOrderClick = () => setShowDeliveryChoice(true);
+  const handleOrderClick = () => {
+    const qty = totalQty(cart);
+    if (qty === 0) return;
+    if (qty > MAX_ITEMS) {
+      setUiError(`Quantité maximale: ${MAX_ITEMS} articles par commande.`);
+      return;
+    }
+    setShowDeliveryChoice(true);
+  };
 
   // Ouvre la carte Sendcloud (Service Point Picker) avec options
   const openSendcloudPicker = async ({ postalCode, coords } = {}) => {
     try {
       await ensureSPPScript();
       if (!SENDCLOUD_PUBLIC_KEY) {
-        alert("Clé publique Sendcloud manquante (VITE_SENDCLOUD_PUBLIC_KEY).");
+        setUiError("Clé publique Sendcloud manquante (VITE_SENDCLOUD_PUBLIC_KEY).");
         return;
       }
 
@@ -122,18 +163,16 @@ function CartOverlay({ isOpen, onClose }) {
         // onError
         (error) => {
           console.error("Sendcloud picker error:", error);
-          alert("Impossible d’ouvrir la carte des points relais. Réessaie plus tard.");
+          setUiError("Impossible d’ouvrir la carte des points relais. Réessaie plus tard.");
         }
       );
     } catch (err) {
       console.error("Impossible de charger le script Sendcloud SPP :", err);
-      alert("Chargement du module points relais échoué.");
+      setUiError("Chargement du module points relais échoué.");
     }
   };
 
-
   const isValidPostal = (cp) => /^[0-9]{5}$/.test((cp || "").trim());
-
 
   const continueWithPostal = async () => {
     if (!isValidPostal(postalCode)) {
@@ -168,6 +207,38 @@ function CartOverlay({ isOpen, onClose }) {
 
         <h2 className="cartOverlay__title">Mon Panier</h2>
 
+        {/* Bannière d'erreur UI */}
+        {uiError && (
+          <div
+            style={{
+              background: "#fff3cd",
+              color: "#664d03",
+              border: "1px solid #ffecb5",
+              padding: "10px 12px",
+              borderRadius: 8,
+              margin: "10px 0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>{uiError}</span>
+            <button
+              onClick={() => setUiError("")}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "#664d03",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              OK
+            </button>
+          </div>
+        )}
+
         {cart.length === 0 ? (
           <p className="cartOverlay__empty-cart">Votre panier est vide.</p>
         ) : (
@@ -194,11 +265,19 @@ function CartOverlay({ isOpen, onClose }) {
                     </div>
 
                     <div className="cartOverlay__actions">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                      <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}>
                         -
                       </button>
                       <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                      <button
+                        onClick={() => {
+                          if (totalQty(cart) >= MAX_ITEMS) {
+                            setUiError(`Quantité maximale atteinte (${MAX_ITEMS} articles).`);
+                            return;
+                          }
+                          updateQuantity(item.id, item.quantity + 1);
+                        }}
+                      >
                         +
                       </button>
                     </div>
@@ -216,10 +295,32 @@ function CartOverlay({ isOpen, onClose }) {
           </ul>
         )}
 
+        {/* Hint max atteint */}
+        {cart.length > 0 && totalQty(cart) === MAX_ITEMS && (
+          <div
+            style={{
+              background: "#eef6ff",
+              color: "#0b5ed7",
+              border: "1px solid #cfe2ff",
+              padding: "8px 10px",
+              borderRadius: 8,
+              marginTop: 8,
+              fontSize: 13,
+            }}
+          >
+            Quantité maximale atteinte ({MAX_ITEMS} articles).
+          </div>
+        )}
+
         {cart.length > 0 && (
           <div className="cartOverlay__footer">
             <p>Total : {totalPrice.toFixed(2)} €</p>
-            <button className="cartOverlay__checkout" onClick={handleOrderClick}>
+            <button
+              className="cartOverlay__checkout"
+              onClick={handleOrderClick}
+              disabled={totalQty(cart) > MAX_ITEMS}
+              style={totalQty(cart) > MAX_ITEMS ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+            >
               Passer la commande
             </button>
           </div>
