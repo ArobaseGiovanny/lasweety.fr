@@ -86,7 +86,6 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     doc.rect(350, 40, 205, 70).fill("#111").fillColor("#fff");
     doc.fontSize(18).text("FACTURE", 360, 50, { width: 190, align: "right" });
     doc.fontSize(10).text(`N° : ${invoiceNumber}`, 360, 75, { width: 190, align: "right" });
-    doc.fillColor("#000");
     doc.text(`Date : ${dateStr}`, { align: "right" });
     if (order.orderNumber) doc.text(`Commande : ${order.orderNumber}`, { align: "right" });
 
