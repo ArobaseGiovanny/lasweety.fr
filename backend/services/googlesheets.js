@@ -92,7 +92,6 @@ function mapOrderToRow(order) {
   return [
     dateStr,                       // A - Date/heure
     order.orderNumber || "",       // B - N° commande
-    order.invoiceNumber || "",     // C - N° facture
     status,                        // D - Statut
     order.customerName || "",      // E - Nom client
     order.customerEmail || "",     // F - Email client
@@ -102,7 +101,6 @@ function mapOrderToRow(order) {
     Number(order.total || 0),      // J - Total TTC
     productsSummary,               // K - Détail produits
     parcelInfo,                    // L - Colis
-    order.stripeSessionId || "",   // M - Stripe Session ID
   ];
 }
 
