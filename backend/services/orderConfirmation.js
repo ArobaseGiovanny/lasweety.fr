@@ -151,8 +151,8 @@ export function orderConfirmationTemplate(order, opts = {}) {
 
   // Totaux
   const total = fmtPrice(order.total || 0);
-  const shippingLabel = hasPickupInfo ? "Point relais Chronopost" : "Livraison à domicile";
-  const shippingCost = fmtPrice(0); // gratuit pour l’instant (modifiable)
+  const shippingLabel = hasPickupInfo ? "Point relais Mondial Relay" : "Livraison à domicile";
+  const shippingCost = fmtPrice(0); 
 
   // CTA vers la page succès (si paramétrée)
   const orderLink =

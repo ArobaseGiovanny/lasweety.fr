@@ -33,7 +33,7 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     const dateStr = dayjs(createdAt).format("DD/MM/YYYY");
     const invoiceNumber = order.invoiceNumber || order.orderNumber || order.id || "N/A";
 
-    // --------- CALCULS ----------
+    // --------- CALCULS ---------- //
     const items = (order.products || order.items || []).map(p => {
       const q = Number(p.quantity || 1);
       const vatRate = Number(p.vatRate ?? defaultVatRate);
@@ -42,10 +42,10 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
 
       if (pricesAreTTC) {
         unitTTC = unitBase;
-        unitHT = unitTTC / (1 + vatRate/100);
+        unitHT = unitTTC / (1 + vatRate / 100);
       } else {
         unitHT = unitBase;
-        unitTTC = unitHT * (1 + vatRate/100);
+        unitTTC = unitHT * (1 + vatRate / 100);
       }
       vatPerUnit = unitTTC - unitHT;
 
@@ -67,21 +67,21 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     const shipping     = Number(order.shipping ?? 0);
     const discount     = Number(order.discount ?? 0);
 
-    const subtotal = Number(order.subtotal ?? calcSubtotal);
-    const vat      = Number(order.vat      ?? calcVAT);
+    const subtotal = Number(order.subtotal ?? calcSubtotal); // TOTAL HT
+    const vat      = Number(order.vat      ?? calcVAT);      // TVA
     const grandTotal =
       Number(order.total ?? order.grandTotal ??
-            (subtotal - discount + vat + shipping));
+        (subtotal - discount + vat + shipping));            // TOTAL TTC
 
-    // --------- EN-TÊTE ----------
+    // --------- EN-TÊTE ---------- //
     if (company.logoBuffer) {
       try { doc.image(company.logoBuffer, 40, 40, { width: 100 }); } catch {}
     }
     doc.fontSize(16).text(company.name || "Votre société", 40, company.logoBuffer ? 150 : 40);
     (company.addressLines || []).forEach((l) => doc.fontSize(10).text(l));
-    if (company.siret)    doc.text(`SIRET : ${company.siret}`);
-    if (company.vatNumber)doc.text(`TVA : ${company.vatNumber}`);
-    if (company.email)    doc.text(`Contact : ${company.email}`);
+    if (company.siret)     doc.text(`SIRET : ${company.siret}`);
+    if (company.vatNumber) doc.text(`TVA : ${company.vatNumber}`);
+    if (company.email)     doc.text(`Contact : ${company.email}`);
 
     doc.rect(350, 40, 205, 70).fill("#111").fillColor("#fff");
     doc.fontSize(18).text("FACTURE", 360, 50, { width: 190, align: "right" });
@@ -90,7 +90,7 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     doc.text(`Date : ${dateStr}`, { align: "right" });
     if (order.orderNumber) doc.text(`Commande : ${order.orderNumber}`, { align: "right" });
 
-    // --------- CLIENT ----------
+    // --------- CLIENT ---------- //
     doc.moveDown().fontSize(12).text("Facturé à :");
     const c = order.customer || {};
     doc.fontSize(10).text(c.name || order.customerName || "");
@@ -101,19 +101,25 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     doc.text(`${a.postal || a.postcode || ""} ${a.city || ""}`);
     if (a.country) doc.text(a.country);
 
-    // --------- TABLEAU ----------
+    // --------- TABLEAU ---------- //
     doc.moveDown().moveDown();
     doc.fontSize(12).text("Détail de la commande");
 
     const headerY = doc.y + 8;
-    const col = { name: 40, qty: 300, unit: 350, vat: 430, total: 510 };
+    const col = {
+      name: 40,
+      qty: 300,
+      priceHT: 350,
+      vat: 430,
+      totalTTC: 510,
+    };
 
     doc.fontSize(10);
     doc.text("Article", col.name, headerY);
     doc.text("Qté", col.qty, headerY, { width: 40, align: "center" });
-    doc.text(pricesAreTTC ? "PU TTC" : "PU HT", col.unit, headerY, { width: 70, align: "right" });
+    doc.text("Prix HT", col.priceHT, headerY, { width: 70, align: "right" });
     doc.text("TVA", col.vat, headerY, { width: 60, align: "right" });
-    doc.text("Total TTC", col.total, headerY, { width: 80, align: "right" });
+    doc.text("Prix TTC", col.totalTTC, headerY, { width: 80, align: "right" });
 
     doc.moveTo(40, headerY + 14).lineTo(555, headerY + 14).strokeColor("#ccc").stroke();
     doc.strokeColor("#000");
@@ -122,41 +128,62 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     items.forEach(it => {
       doc.text(it.name, col.name, y, { width: 250 });
       doc.text(String(it.q), col.qty, y, { width: 40, align: "center" });
-      // Empêcher l'euro de passer à la ligne
-      const pu = pricesAreTTC ? money(it.unitTTC, currency) : money(it.unitHT, currency);
-      doc.text(pu, col.unit, y, { width: 70, align: "right", lineBreak: false });
-      doc.text(`${it.vatRate}%`, col.vat, y, { width: 60, align: "right" });
-      doc.text(money(it.lineTTC, currency), col.total, y, { width: 80, align: "right", lineBreak: false });
+
+      // PRIX HT (ligne)
+      doc.text(
+        money(it.lineHT, currency),
+        col.priceHT,
+        y,
+        { width: 70, align: "right", lineBreak: false }
+      );
+
+      // TVA (montant)
+      doc.text(
+        money(it.lineVAT, currency),
+        col.vat,
+        y,
+        { width: 60, align: "right", lineBreak: false }
+      );
+
+      // PRIX TTC (ligne)
+      doc.text(
+        money(it.lineTTC, currency),
+        col.totalTTC,
+        y,
+        { width: 80, align: "right", lineBreak: false }
+      );
+
       y += 18;
     });
 
-    // --------- TOTAUX ----------
+    // --------- TOTAUX ---------- //
     y += 6;
     doc.moveTo(40, y).lineTo(555, y).strokeColor("#eee").stroke();
     y += 12;
 
-    // Cartouche totaux
     const boxX = 335, boxW = 220, lineH = 16;
-    doc.roundedRect(boxX, y, boxW, 4*lineH + 18, 8).fill("#fafafa").stroke("#eaeaea");
+    doc.roundedRect(boxX, y, boxW, 4 * lineH + 18, 8).fill("#fafafa").stroke("#eaeaea");
     doc.fillColor("#000");
 
     let ty = y + 10;
-    const label = (t) => doc.fontSize(10).text(t, boxX + 10, ty, { width: 130, align: "left", lineBreak: false });
-    const value = (v,bold=false) => {
+    const label = (t) =>
+      doc.fontSize(10).text(t, boxX + 10, ty, { width: 130, align: "left", lineBreak: false });
+    const value = (v, bold = false) => {
       if (bold) doc.font("Helvetica-Bold");
       doc.text(v, boxX + 140, ty, { width: boxW - 150, align: "right", lineBreak: false });
       if (bold) doc.font("Helvetica");
     };
 
-    label("Sous-total HT :"); value(money(subtotal, currency)); ty += lineH;
+    // → PRIX HT / TVA / PRIX TTC dans le bloc totaux
+    label("Total HT :"); value(money(subtotal, currency)); ty += lineH;
     if (discount) { label("Remise :"); value("- " + money(discount, currency)); ty += lineH; }
     label("TVA :"); value(money(vat, currency)); ty += lineH;
     if (shipping) { label("Frais de port :"); value(money(shipping, currency)); ty += lineH; }
-    doc.moveTo(boxX+10, ty+6).lineTo(boxX+boxW-10, ty+6).strokeColor("#e0e0e0").stroke();
+    doc.moveTo(boxX + 10, ty + 6).lineTo(boxX + boxW - 10, ty + 6).strokeColor("#e0e0e0").stroke();
     ty += 10;
     label("Total TTC :"); value(money(grandTotal, currency), true);
 
-    // --------- PIED ----------
+    // --------- PIED ---------- //
     doc.moveDown().moveDown();
     doc.fontSize(9).fillColor("#555").text("Merci pour votre commande !", { align: "center" });
     doc.fontSize(8).text("Facture générée automatiquement.", { align: "center" });
