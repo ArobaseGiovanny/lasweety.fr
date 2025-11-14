@@ -156,7 +156,7 @@ function CartOverlay({ isOpen, onClose }) {
         apiKey: SENDCLOUD_PUBLIC_KEY,
         country: "FR",
         language: "fr-fr",
-        carriers: ["chronopost"], // limite à Chronopost
+        carriers: ["mondial_relay"],
       };
 
       const opts = { ...baseOptions };
@@ -353,10 +353,10 @@ function CartOverlay({ isOpen, onClose }) {
                 onClick={() => {
                   setDeliveryMode("pickup");
                   setShowDeliveryChoice(false);
-                  setShowPostalModal(true); // 👉 on demande le code postal
+                  setShowPostalModal(true);
                 }}
               >
-                📦 Point relais Chronopost
+                📦 Point relais Mondial Relay
               </button>
             </div>
 
