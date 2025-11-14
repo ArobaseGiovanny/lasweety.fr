@@ -18,6 +18,21 @@ const money = (v, c = "EUR") => {
  *   - defaultVatRate: number (default: 20)
  */
 export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
+  console.log("DEBUG ENV SOCIETE =", {
+  COMPANY_NAME: process.env.COMPANY_NAME,
+  COMPANY_ADDRESS_LINE1: process.env.COMPANY_ADDRESS_LINE1,
+  COMPANY_ADDRESS_LINE2: process.env.COMPANY_ADDRESS_LINE2,
+  COMPANY_POSTAL_CODE: process.env.COMPANY_POSTAL_CODE,
+  COMPANY_CITY: process.env.COMPANY_CITY,
+  COMPANY_COUNTRY: process.env.COMPANY_COUNTRY,
+  COMPANY_SIRET: process.env.COMPANY_SIRET,
+  COMPANY_VAT_NUMBER: process.env.COMPANY_VAT_NUMBER,
+  SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
+});
+
+  console.log("DEBUG COMPANY PASSE AU PDF =", company);
+
+
   const pricesAreTTC = opts.pricesAreTTC ?? true;
   const defaultVatRate = Number(opts.defaultVatRate ?? 20);
 
@@ -87,8 +102,8 @@ export function generateInvoicePdfBuffer(order, company = {}, opts = {}) {
     doc.fontSize(18).text("FACTURE", 360, 50, { width: 190, align: "right" });
     doc.fontSize(10).text(`N° : ${invoiceNumber}`, 360, 75, { width: 190, align: "right" });
     doc.text(`Date : ${dateStr}`, { align: "right" });
-    doc.fillColor("#000");
     if (order.orderNumber) doc.text(`Commande : ${order.orderNumber}`, { align: "right" });
+    doc.fillColor("#000");
 
     // --------- CLIENT ---------- //
     doc.moveDown().fontSize(12).text("Facturé à :");
