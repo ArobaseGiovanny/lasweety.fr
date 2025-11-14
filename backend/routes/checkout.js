@@ -10,6 +10,8 @@ import { PACKAGING, selectPackaging } from "../config/shipping.js";
 import { generateInvoicePdfBuffer } from "../services/invoicePdf.js";
 import fs from "fs";
 import path from "path";
+import { appendOrderToSheet } from "../services/googleSheets.js";
+
 
 dotenv.config();
 
@@ -383,6 +385,11 @@ router.post("/webhook", async (req, res) => {
             ],
           });
           console.log("[WH] confirmation email sent to:", freshOrder.customerEmail);
+          try {
+            await appendOrderToSheet(freshOrder);
+          } catch (e) {
+            console.error("[WH] appendOrderToSheet error:", e?.message);
+          }
         } else {
           console.log("[WH] email already sent / claimed");
         }
@@ -391,6 +398,7 @@ router.post("/webhook", async (req, res) => {
         await Order.updateOne({ _id: created._id }, { $set: { emailSent: false } });
       }
     }
+
 
     return res.json({ received: true });
   } catch (err) {
