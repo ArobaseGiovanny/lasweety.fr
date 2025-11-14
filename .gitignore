@@ -50,3 +50,5 @@ Thumbs.db
 # 🧪 AUTRES
 # ==============================
 *.local
+
+backend/credentials/*.json
