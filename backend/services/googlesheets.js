@@ -44,6 +44,7 @@ function mapOrderToRow(order) {
   // Mode de livraison / adresse
   let deliveryLabel = order.deliveryMode === "pickup" ? "Point relais" : "Domicile";
   let deliveryDetails = "";
+  let pickupId = ""; // ID point relais (si applicable)
 
   if (order.deliveryMode === "pickup" && order.pickupPoint) {
     // Point relais
@@ -56,6 +57,8 @@ function mapOrderToRow(order) {
     ]
       .filter(Boolean)
       .join(" - ");
+
+    pickupId = pp.id || "";
   } else {
     // Livraison à domicile : on prend d'abord shippingAddress,
     // si vide on tombe sur billingAddress
@@ -81,26 +84,20 @@ function mapOrderToRow(order) {
     )
     .join(" | ");
 
-  // Info colis
-  const parcel = order.parcel || {};
-  const parcelInfo = parcel.weightKg
-    ? `${parcel.weightKg} kg – ${parcel.lengthCm || "?"}x${parcel.widthCm || "?"}x${parcel.heightCm || "?"} cm (${parcel.packageType || "?"})`
-    : "";
-
   const status = order.status || "paid";
 
   return [
     dateStr,                       // A - Date/heure
     order.orderNumber || "",       // B - N° commande
-    status,                        // D - Statut
-    order.customerName || "",      // E - Nom client
-    order.customerEmail || "",     // F - Email client
-    order.customerPhone || "",     // G - Téléphone
-    deliveryLabel,                 // H - Mode de livraison
-    deliveryDetails,               // I - Adresse / relais
+    status,                        // C - Statut
+    order.customerName || "",      // D - Nom client
+    order.customerEmail || "",     // E - Email client
+    order.customerPhone || "",     // F - Téléphone
+    deliveryLabel,                 // G - Mode de livraison
+    deliveryDetails,               // H - Adresse / relais
+    pickupId,                      // I - ID point relais (si pickup)
     Number(order.total || 0),      // J - Total TTC
     productsSummary,               // K - Détail produits
-    parcelInfo,                    // L - Colis
   ];
 }
 
