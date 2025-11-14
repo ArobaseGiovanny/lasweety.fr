@@ -46,6 +46,7 @@ function mapOrderToRow(order) {
   let deliveryDetails = "";
 
   if (order.deliveryMode === "pickup" && order.pickupPoint) {
+    // Point relais
     const pp = order.pickupPoint;
     deliveryDetails = [
       pp.name,
@@ -55,8 +56,13 @@ function mapOrderToRow(order) {
     ]
       .filter(Boolean)
       .join(" - ");
-  } else if (order.shippingAddress) {
-    const a = order.shippingAddress;
+  } else {
+    // Livraison à domicile : on prend d'abord shippingAddress,
+    // si vide on tombe sur billingAddress
+    const hasShipping =
+      order.shippingAddress && Object.keys(order.shippingAddress).length > 0;
+    const a = hasShipping ? order.shippingAddress : (order.billingAddress || {});
+
     deliveryDetails = [
       a.line1,
       a.line2,
