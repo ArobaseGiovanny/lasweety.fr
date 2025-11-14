@@ -84,12 +84,9 @@ function mapOrderToRow(order) {
     )
     .join(" | ");
 
-  const status = order.status || "paid";
-
   return [
     dateStr,                       // A - Date/heure
     order.orderNumber || "",       // B - N° commande
-    status,                        // C - Statut
     order.customerName || "",      // D - Nom client
     order.customerEmail || "",     // E - Email client
     order.customerPhone || "",     // F - Téléphone
