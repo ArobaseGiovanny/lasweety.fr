@@ -10,7 +10,7 @@ import { PACKAGING, selectPackaging } from "../config/shipping.js";
 import { generateInvoicePdfBuffer } from "../services/invoicePdf.js";
 import fs from "fs";
 import path from "path";
-import { appendOrderToSheet } from "../services/googleSheets.js";
+import { appendOrderToSheet } from "../services/googlesheets.js";
 
 
 dotenv.config();
