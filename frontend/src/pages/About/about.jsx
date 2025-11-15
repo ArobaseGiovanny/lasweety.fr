@@ -15,9 +15,9 @@ function About() {
         <h2>Éditeur du site</h2>
         <p>
           <strong>La Sweety</strong><br />
-          Auto-entreprise enregistrée au Registre du Commerce et des Sociétés de Paris<br />
-          SIRET : 123 456 789 00010<br />
-          Adresse : 10 Rue des Fleurs, 75000 Paris, France<br />
+          SASU, société par actions simplifiée unipersonnelle<br />
+          SIRET : 989 723 846 00014<br />
+          Adresse : 79 IMPASSE TEMPS, 27410 MESNIL-EN-OUCHE <br />
           Email : <a href="mailto:contact@lasweety.com">contact@lasweety.com</a><br />
           Responsable de publication : Laurinda Hayet
         </p>
