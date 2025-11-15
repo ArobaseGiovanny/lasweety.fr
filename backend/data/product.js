@@ -3,7 +3,7 @@ const products = {
     id: 101,
     name: "Sweetyx Orange",
     color: "orange",
-    price: 34.99,
+    price: 1.00,
     description: "Un ourson orange qui fait fondre les cœurs 💙",
     weightKg: 0.205,
   },
