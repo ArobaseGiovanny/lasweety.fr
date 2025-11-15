@@ -84,6 +84,12 @@ function mapOrderToRow(order) {
     )
     .join(" | ");
 
+      // Poids du colis (en kg) – pris depuis order.parcel.weightKg
+  const parcel = order.parcel || {};
+  const parcelWeightKg = parcel.weightKg
+    ? Number(parcel.weightKg)
+    : ""; // on laisse vide si pas défini
+
   return [
     dateStr,                       // A - Date/heure
     order.orderNumber || "",       // B - N° commande
@@ -94,6 +100,7 @@ function mapOrderToRow(order) {
     deliveryDetails,               // H - Adresse / relais
     pickupId,                      // I - ID point relais (si pickup)
     Number(order.total || 0),      // J - Total TTC
+    parcelWeightKg,
     productsSummary,               // K - Détail produits
   ];
 }

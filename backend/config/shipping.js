@@ -1,7 +1,19 @@
 // Gabarits colis 
 export const PACKAGING = {
-  SMALL: { lengthCm: 30, widthCm: 25, heightCm: 15, tareKg: 0.12, maxItems: 2 },
-  LARGE: { lengthCm: 40, widthCm: 30, heightCm: 20, tareKg: 0.20, maxItems: 4 },
+    SMALL: {
+    lengthCm: 30,   // Longueur (L)
+    widthCm: 25,    // Largeur (l)
+    heightCm: 8,    // Épaisseur 
+    tareKg: 0.03,   // ~30 g pour une petite enveloppe plastique
+    maxItems: 2,
+  },
+  LARGE: {
+    lengthCm: 45,   // Longueur (L)
+    widthCm: 35,    // Largeur (l)
+    heightCm: 10,   // Épaisseur
+    tareKg: 0.04,   // ~40 g pour une grande enveloppe
+    maxItems: 4,
+  },
 };
 
 // Sélectionne un gabarit en fonction de la quantité d'articles
