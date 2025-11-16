@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import adminRoutes from "./routes/admin.js";
 import checkoutRoutes from "./routes/checkout.js";
 import chronopostRouter from "./routes/chronopost.js";
+import productsDetailsRouter from "./routes/productsDetails.js"
 
 // Charge le bon .env selon APP_ENV (défaut: test)
 const appEnv = process.env.APP_ENV || "test";
@@ -68,6 +69,8 @@ app.options(/.*/, cors(corsOptions));
 app.use("/api/admin", adminRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/chronopost", chronopostRouter);
+app.use("/api/products", productsDetailsRouter);
+
 
 // Error handler
 app.use((err, _req, res, _next) => {

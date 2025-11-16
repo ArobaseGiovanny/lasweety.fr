@@ -317,6 +317,16 @@ $product-default-color: #0095ff;
       padding: 10px 0 10px 0;
     }
   }
+
+  &__stock {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding: 5px 15px;
+    border-radius: 20px;
+    text-align: center;
+    color: white;
+    margin-bottom: 15px;
+
+  }
 }
 /* ============================= */
 /* ====== SPECS MODAL ========== */
@@ -622,6 +632,7 @@ $product-default-color: #0095ff;
 
 /* Couleurs depuis la map $colors + thèmes dynamiques */
 @each $name, $value in $colors {
+
   .productOverlay__box-color--#{$name} {
     background-color: $value;
   }
@@ -630,6 +641,9 @@ $product-default-color: #0095ff;
     .productOverlay__box-color--#{$name} {
       border: 4px solid #333;
     }
+  .productOverlay__stock {
+    background-color: $value;
+  }
 
     .productOverlay__description h2 {
       color: $value;

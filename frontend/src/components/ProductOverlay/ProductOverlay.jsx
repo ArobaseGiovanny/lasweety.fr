@@ -30,12 +30,49 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
   const openSpecs = () => setIsSpecsOpen(true);
   const closeSpecs = () => setIsSpecsOpen(false);
 
+  // ===== Gestion du stock ====
+  const [stock, setStock] = useState(null);
+  const [stockLoading, setStockLoading] = useState(false);
+  const [stockError, setStockError] = useState(null);
+
   // ===== LIGHTBOX =====
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const lightboxViewportRef = useRef(null);
   const openLightbox = (idx = 0) => { setLightboxIndex(idx); setIsLightboxOpen(true); };
   const closeLightbox = () => setIsLightboxOpen(false);
+
+  // ===== LOAD STOCK FROM API =====
+  useEffect(() => {
+    if (!product || !isOpen) return; // on évite de fetch si rien à afficher
+
+    setStockLoading(true);
+    setStockError(null);
+
+    fetch("/api/products")
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur de chargement du stock");
+        return res.json();
+      })
+      .then((list) => {
+        const match = Array.isArray(list)
+          ? list.find((p) => p.id === product.id)
+          : null;
+
+        if (!match) {
+          setStock(null);
+          setStockError("Stock non disponible pour ce produit.");
+          return;
+        }
+
+        setStock(typeof match.stock === "number" ? match.stock : null);
+      })
+      .catch((err) => {
+        console.error("Stock fetch error:", err);
+        setStockError("Stock indisponible pour le moment.");
+      })
+      .finally(() => setStockLoading(false));
+  }, [product, isOpen]);
 
   // Lock body scroll quand un overlay est ouvert
   useEffect(() => {
@@ -326,6 +363,27 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
           </div>
 
           <div className="productOverlay__purchase">
+                        </div>
+                          {/* 🔹 Affichage du stock */}
+              <div className="productOverlay__stock">
+                {stockLoading && <p>Chargement du stock…</p>}
+
+                {!stockLoading && stockError && (
+                  <p>{stockError}</p>
+                )}
+
+                {!stockLoading && !stockError && typeof stock === "number" && (
+                  stock > 0 ? (
+                    <p>
+                      {stock <= 3
+                        ? `Plus que ${stock} exemplaire${stock > 1 ? "s" : ""} en stock`
+                        : `${stock} exemplaires en stock`}
+                    </p>
+                  ) : (
+                    <p>Rupture de stock</p>
+                  )
+                )}
+              </div>
             <div className="productOverlay__quantity-price">
               <div className="productOverlay__quantity">
                 <button
@@ -355,13 +413,17 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
                     : `Limite du panier atteinte (${CART_MAX_ITEMS}).`}
                 </p>
               )}
-            </div>
 
             <div className="productOverlay__add-to-cart">
-              <button onClick={handleAddToCart} disabled={remaining <= 0}>
-                Ajouter au panier
+            <div className="productOverlay__add-to-cart">
+              <button
+                onClick={handleAddToCart}
+                disabled={remaining <= 0 || stock === 0}
+              >
+                {stock === 0 ? "Rupture de stock" : "Ajouter au panier"}
               </button>
               <p>Livraison offerte.</p>
+            </div>
             </div>
           </div>
 
