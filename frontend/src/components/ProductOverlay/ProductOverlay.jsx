@@ -49,7 +49,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
     setStockLoading(true);
     setStockError(null);
 
-    fetch("/api/products")
+    fetch("https://api.lasweety.com/api/products")
       .then((res) => {
         if (!res.ok) throw new Error("Erreur de chargement du stock");
         return res.json();
