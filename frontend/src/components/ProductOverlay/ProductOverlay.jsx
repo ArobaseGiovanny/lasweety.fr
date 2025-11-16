@@ -364,7 +364,7 @@ useEffect(() => {
           </div>
 
           <div className="productOverlay__purchase">
-                        </div>
+                        
             <div className="productOverlay__quantity-price">
               <div className="productOverlay__quantity">
                 <button
@@ -427,6 +427,7 @@ useEffect(() => {
               </div>
             </div>
             </div>
+          </div>
           </div>
 
           {/* ===== SPECS MODAL ===== */}
