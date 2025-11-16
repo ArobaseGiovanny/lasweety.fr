@@ -43,36 +43,37 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
   const closeLightbox = () => setIsLightboxOpen(false);
 
   // ===== LOAD STOCK FROM API =====
-  useEffect(() => {
-    if (!product || !isOpen) return; // on évite de fetch si rien à afficher
+useEffect(() => {
+  if (!product || !isOpen) return;
 
-    setStockLoading(true);
-    setStockError(null);
+  setStockLoading(true);
+  setStockError(null);
 
-    fetch("https://api.lasweety.com/api/products")
-      .then((res) => {
-        if (!res.ok) throw new Error("Erreur de chargement du stock");
-        return res.json();
-      })
-      .then((list) => {
-        const match = Array.isArray(list)
-          ? list.find((p) => p.id === product.id)
-          : null;
+  fetch("https://api.lasweety.com/api/products")
+    .then((res) => {
+      if (!res.ok) throw new Error("Erreur de chargement du stock");
+      return res.json();
+    })
+    .then((list) => {
+      const match = Array.isArray(list)
+        ? list.find((p) => String(p.id) === String(product.id))
+        : null;
 
-        if (!match) {
-          setStock(null);
-          setStockError("Stock non disponible pour ce produit.");
-          return;
-        }
+      if (!match) {
+        setStock(null);
+        setStockError("Stock non disponible pour ce produit.");
+        return;
+      }
 
-        setStock(typeof match.stock === "number" ? match.stock : null);
-      })
-      .catch((err) => {
-        console.error("Stock fetch error:", err);
-        setStockError("Stock indisponible pour le moment.");
-      })
-      .finally(() => setStockLoading(false));
-  }, [product, isOpen]);
+      setStock(typeof match.stock === "number" ? match.stock : null);
+    })
+    .catch((err) => {
+      console.error("Stock fetch error:", err);
+      setStockError("Stock indisponible pour le moment.");
+    })
+    .finally(() => setStockLoading(false));
+}, [product, isOpen]);
+
 
   // Lock body scroll quand un overlay est ouvert
   useEffect(() => {
