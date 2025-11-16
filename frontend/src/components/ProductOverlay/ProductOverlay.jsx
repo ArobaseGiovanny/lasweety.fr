@@ -365,26 +365,6 @@ useEffect(() => {
 
           <div className="productOverlay__purchase">
                         </div>
-                          {/* 🔹 Affichage du stock */}
-              <div className="productOverlay__stock">
-                {stockLoading && <p>Chargement du stock…</p>}
-
-                {!stockLoading && stockError && (
-                  <p>{stockError}</p>
-                )}
-
-                {!stockLoading && !stockError && typeof stock === "number" && (
-                  stock > 0 ? (
-                    <p>
-                      {stock <= 3
-                        ? `Plus que ${stock} exemplaire${stock > 1 ? "s" : ""} en stock`
-                        : `${stock} exemplaires en stock`}
-                    </p>
-                  ) : (
-                    <p>Rupture de stock</p>
-                  )
-                )}
-              </div>
             <div className="productOverlay__quantity-price">
               <div className="productOverlay__quantity">
                 <button
@@ -423,7 +403,28 @@ useEffect(() => {
               >
                 {stock === 0 ? "Rupture de stock" : "Ajouter au panier"}
               </button>
-              <p>Livraison offerte.</p>
+              <div className="productOverlay__delivery-stock">
+                              <p>Livraison offerte. </p>
+              <div className="productOverlay__stock">
+                {stockLoading && <p>Chargement du stock…</p>}
+
+                {!stockLoading && stockError && (
+                  <p>{stockError}</p>
+                )}
+
+                {!stockLoading && !stockError && typeof stock === "number" && (
+                  stock > 0 ? (
+                    <p>
+                      {stock <= 3
+                        ? `Plus que ${stock} exemplaire${stock > 1 ? "s" : ""} en stock`
+                        : `${stock} exemplaires en stock`}
+                    </p>
+                  ) : (
+                    <p>Rupture de stock</p>
+                  )
+                )}
+              </div>
+              </div>
             </div>
             </div>
           </div>
