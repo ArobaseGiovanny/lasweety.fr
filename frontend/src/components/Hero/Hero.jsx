@@ -1,9 +1,9 @@
 import { useRef, useEffect } from "react";
 import "./hero.scss";
 import sweetyxOrange from "../../assets/icons/sweetyx-orange.png";
-import sweetyxMarron from "../../assets/icons/sweetyx-marron.png";
+import sweetyxMarron from "../../assets/icons/sweetyx-marron-rupturedestock.png";
 import sweetyxBleu from "../../assets/icons/sweetyx-bleu.png";
-import sweetyxRose from "../../assets/icons/sweetyx-rose.png";
+import sweetyxRose from "../../assets/icons/sweetyx-rose-rupturedestock.png";
 import tableBois from "../../assets/background/table.jpg";
 import { IoIosArrowDown } from "react-icons/io";
 import "../../scripts/adaptWidth";
