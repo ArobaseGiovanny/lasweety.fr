@@ -53,7 +53,7 @@ function About() {
 
         <h2>Livraison</h2>
         <p>
-          La Sweety expédie ses produits en France métropolitaine et en Belgique via Chronopost.
+          La Sweety expédie ses produits en France métropolitaine et en Belgique via Mondial Relay.
           Les délais de livraison indiqués sur le site sont donnés à titre indicatif et peuvent varier selon les périodes.
         </p>
 
