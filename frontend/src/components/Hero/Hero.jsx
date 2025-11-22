@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import "./hero.scss";
-import sweetyxOrange from "../../assets/icons/sweetyx-orange.png";
+import sweetyxOrange from "../../assets/icons/sweetyx-orange-rupturedestock.png";
 import sweetyxMarron from "../../assets/icons/sweetyx-marron-rupturedestock.png";
 import sweetyxBleu from "../../assets/icons/sweetyx-bleu-rupturedestock.png";
 import sweetyxRose from "../../assets/icons/sweetyx-rose-rupturedestock.png";
