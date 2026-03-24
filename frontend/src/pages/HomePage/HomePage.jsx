@@ -71,6 +71,15 @@ function HomePage() {
   const videosRef = useRef(null);
   const videosSwiperRef = useRef(null);
   const shortsSwiperRef = useRef(null);
+  const reseauxWrapperRef = useRef(null);
+
+  useEffect(() => {
+    const el = reseauxWrapperRef.current;
+    if (!el) return;
+    const handler = (e) => e.preventDefault();
+    el.addEventListener("touchmove", handler, { passive: false });
+    return () => el.removeEventListener("touchmove", handler);
+  }, []);
 
   useEffect(() => {
     const heroObs = new IntersectionObserver(
@@ -261,11 +270,13 @@ function HomePage() {
         <h2 className="homePage__reseaux-title">Nos réseaux</h2>
 
         {/* Mobile : slider empilé */}
+        <div ref={reseauxWrapperRef} className="homePage__reseaux-wrapper">
         <Swiper
           effect="cards"
           grabCursor={true}
-          loop={true}
-          touchStartPreventDefault={false}
+          touchMoveStopPropagation={true}
+          resistance={false}
+          touchAngle={45}
           modules={[EffectCards]}
           className="homePage__reseaux-swiper"
         >
@@ -292,6 +303,7 @@ function HomePage() {
             </SwiperSlide>
           ))}
         </Swiper>
+        </div>
 
         {/* Desktop : toutes les cartes côte à côte */}
         <div className="homePage__reseaux-grid">
