@@ -558,6 +558,7 @@ $breakpoint-desktop: 900px;
     width: 300px;
     max-width: 90vw;
     margin: 0 auto;
+    touch-action: pan-x;
 
     @media (min-width: $breakpoint-desktop) {
       display: none;

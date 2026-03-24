@@ -265,6 +265,7 @@ function HomePage() {
           effect="cards"
           grabCursor={true}
           loop={true}
+          touchStartPreventDefault={false}
           modules={[EffectCards]}
           className="homePage__reseaux-swiper"
         >
