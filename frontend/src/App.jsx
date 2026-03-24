@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import HomePage from "./pages/HomePage/HomePage";
 import PeluchesPage from "./pages/PeluchesPage/PeluchesPage";
 import SuccessPage from "./pages/Checkout/SuccessPage/SuccessPage";
 import CancelPage from "./pages/Checkout/CancelPage/CancelPage";
@@ -9,21 +10,23 @@ import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminLogin from "./pages/LoginAdmin/AdminLogin";
 import About from "./pages/About/about"
 
-function App() {
+function AppContent() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(
     !!localStorage.getItem("adminToken")
   );
+  const location = useLocation();
+  const showCart = location.pathname !== "/";
 
   return (
-    <Router basename="/">
-      <Navbar onCartClick={() => setIsCartOpen(true)} />
-      <CartOverlay isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+    <>
+      <Navbar onCartClick={() => setIsCartOpen(true)} showCart={showCart} />
+      {showCart && <CartOverlay isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />}
 
       <Routes>
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/cancel" element={<CancelPage />} />
-        <Route path="/" element={<PeluchesPage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/peluches" element={<PeluchesPage />} />
         <Route path="/about" element={<About />} />
 
@@ -41,6 +44,14 @@ function App() {
           }
         />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router basename="/">
+      <AppContent />
     </Router>
   );
 }

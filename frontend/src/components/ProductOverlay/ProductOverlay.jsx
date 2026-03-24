@@ -46,10 +46,12 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
 useEffect(() => {
   if (!product || !isOpen) return;
 
+  const controller = new AbortController();
+
   setStockLoading(true);
   setStockError(null);
 
-  fetch("https://api.lasweety.com/api/products")
+  fetch("https://api.lasweety.com/api/products", { signal: controller.signal })
     .then((res) => {
       if (!res.ok) throw new Error("Erreur de chargement du stock");
       return res.json();
@@ -68,10 +70,13 @@ useEffect(() => {
       setStock(typeof match.stock === "number" ? match.stock : null);
     })
     .catch((err) => {
+      if (err.name === "AbortError") return;
       console.error("Stock fetch error:", err);
       setStockError("Stock indisponible pour le moment.");
     })
     .finally(() => setStockLoading(false));
+
+  return () => controller.abort();
 }, [product, isOpen]);
 
 
@@ -104,16 +109,7 @@ useEffect(() => {
       }
       if (isLightboxOpen && (e.key === "ArrowRight" || e.key === "ArrowLeft")) {
         e.preventDefault();
-        const vp = lightboxViewportRef.current;
-        if (!vp) return;
-        const total = images.length;
-        const nextIdx = e.key === "ArrowRight"
-          ? (lightboxIndex + 1) % total
-          : (lightboxIndex - 1 + total) % total;
-        setLightboxIndex(nextIdx);
-        requestAnimationFrame(() => {
-          vp.scrollTo({ left: nextIdx * vp.clientWidth, behavior: "smooth" });
-        });
+        lightboxGoTo(e.key === "ArrowRight" ? lightboxIndex + 1 : lightboxIndex - 1);
       }
     };
     window.addEventListener("keydown", onKey, { passive: false });
@@ -196,6 +192,13 @@ useEffect(() => {
     onClose();
   };
 
+  // Reset quantity, error et slide carrousel quand le produit change
+  useEffect(() => {
+    setQuantity(1);
+    setUiError("");
+    setCurrent(0);
+  }, [product?.id]);
+
   // ===== CARROUSEL =====
   const images = product?.images ?? [];
   const [current, setCurrent] = useState(0);
@@ -238,6 +241,14 @@ useEffect(() => {
 
   const onLightboxBackdrop = (e) => {
     if (e.target === e.currentTarget) closeLightbox();
+  };
+
+  const lightboxGoTo = (idx) => {
+    const total = images.length;
+    const next = ((idx % total) + total) % total;
+    setLightboxIndex(next);
+    const vp = lightboxViewportRef.current;
+    if (vp) vp.scrollTo({ left: next * vp.clientWidth, behavior: "smooth" });
   };
 
   return (
@@ -396,12 +407,11 @@ useEffect(() => {
               )}
 
             <div className="productOverlay__add-to-cart">
-            <div className="productOverlay__add-to-cart">
               <button
                 onClick={handleAddToCart}
-                disabled={remaining <= 0 || stock === 0}
+                disabled={remaining <= 0 || stock === 0 || stock === null || stockLoading}
               >
-                {stock === 0 ? "Rupture de stock" : "Ajouter au panier"}
+                {stock === 0 || stock === null ? "Rupture de stock" : "Ajouter au panier"}
               </button>
               <div className="productOverlay__delivery-stock">
                               <p>Livraison offerte. </p>
@@ -427,7 +437,6 @@ useEffect(() => {
               </div>
             </div>
             </div>
-          </div>
           </div>
 
           {/* ===== SPECS MODAL ===== */}
@@ -526,14 +535,7 @@ useEffect(() => {
                         type="button"
                         className="lightbox__arrow lightbox__arrow--prev"
                         aria-label="Image précédente"
-                        onClick={() => {
-                          const vp = lightboxViewportRef.current;
-                          if (!vp) return;
-                          const total = images.length;
-                          const idx = ((lightboxIndex - 1) % total + total) % total;
-                          setLightboxIndex(idx);
-                          vp.scrollTo({ left: idx * vp.clientWidth, behavior: "smooth" });
-                        }}
+                        onClick={() => lightboxGoTo(lightboxIndex - 1)}
                       >
                         ‹
                       </button>
@@ -541,14 +543,7 @@ useEffect(() => {
                         type="button"
                         className="lightbox__arrow lightbox__arrow--next"
                         aria-label="Image suivante"
-                        onClick={() => {
-                          const vp = lightboxViewportRef.current;
-                          if (!vp) return;
-                          const total = images.length;
-                          const idx = ((lightboxIndex + 1) % total + total) % total;
-                          setLightboxIndex(idx);
-                          vp.scrollTo({ left: idx * vp.clientWidth, behavior: "smooth" });
-                        }}
+                        onClick={() => lightboxGoTo(lightboxIndex + 1)}
                       >
                         ›
                       </button>
@@ -561,12 +556,7 @@ useEffect(() => {
                             role="tab"
                             aria-selected={i === lightboxIndex}
                             aria-label={`Aller à l'image ${i + 1}`}
-                            onClick={() => {
-                              const vp = lightboxViewportRef.current;
-                              if (!vp) return;
-                              setLightboxIndex(i);
-                              vp.scrollTo({ left: i * vp.clientWidth, behavior: "smooth" });
-                            }}
+                            onClick={() => lightboxGoTo(i)}
                           />
                         ))}
                       </div>

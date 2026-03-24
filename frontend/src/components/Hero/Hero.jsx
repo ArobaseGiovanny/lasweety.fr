@@ -1,9 +1,9 @@
 import { useRef, useEffect } from "react";
 import "./hero.scss";
-import sweetyxOrange from "../../assets/icons/sweetyx-orange-rupturedestock.png";
-import sweetyxMarron from "../../assets/icons/sweetyx-marron-rupturedestock.png";
-import sweetyxBleu from "../../assets/icons/sweetyx-bleu-rupturedestock.png";
-import sweetyxRose from "../../assets/icons/sweetyx-rose-rupturedestock.png";
+import sweetyxOrange from "../../assets/icons/sweetyx-orange.png";
+import sweetyxMarron from "../../assets/icons/sweetyx-marron.png";
+import sweetyxBleu   from "../../assets/icons/sweetyx-blanc.png";
+import sweetyxRose   from "../../assets/icons/sweetyx-rose.png";
 import tableBois from "../../assets/background/table.jpg";
 import { IoIosArrowDown } from "react-icons/io";
 import "../../scripts/adaptWidth";
@@ -35,26 +35,10 @@ function Hero({ onPelucheClick }) {
         <IoIosArrowDown />
       </div>
       <div className="hero__images">
-        <img
-          src={sweetyxOrange}
-          alt="Ourson de couleur orange"
-          onClick={() => onPelucheClick(101)}
-        />
-        <img
-          src={sweetyxBleu}
-          alt="Ourson de couleur bleu"
-          onClick={() => onPelucheClick(102)}
-        />
-        <img
-          src={sweetyxRose}
-          alt="Ourson de couleur rose"
-          onClick={() => onPelucheClick(103)}
-        />
-        <img
-          src={sweetyxMarron}
-          alt="Ourson de couleur marron"
-          onClick={() => onPelucheClick(104)}
-        />
+        <img src={sweetyxOrange} alt="Ourson de couleur orange" onClick={() => onPelucheClick(101)} />
+        <img src={sweetyxBleu}   alt="Ourson de couleur bleu"   onClick={() => onPelucheClick(102)} />
+        <img src={sweetyxRose}   alt="Ourson de couleur rose"   onClick={() => onPelucheClick(103)} />
+        <img src={sweetyxMarron} alt="Ourson de couleur marron" onClick={() => onPelucheClick(104)} />
       </div>
       <img src={tableBois} alt="Table en bois" className="hero__table" />
     </main>

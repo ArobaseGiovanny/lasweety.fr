@@ -20,7 +20,7 @@
         & span:nth-child(2) {
             margin-top: -15px;
         }
-        
+
         & svg {
             width: 100%;
         }
@@ -59,7 +59,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(10px); // descend légèrement
+    transform: translateY(10px);
   }
 }
 
@@ -82,7 +82,7 @@
             width: 100%;
             height: auto;
         }
-    
+
   }
 }
 
@@ -107,7 +107,7 @@
         &__table {
             margin-top: -70px;
         }
-    
+
   }
 }
 

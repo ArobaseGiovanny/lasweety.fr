@@ -1,5 +1,5 @@
 import iconPelucheOrange from "../assets/icons/sweetyx-orange.png";
-import iconPelucheBleu from "../assets/icons/sweetyx-bleu.png";
+import iconPelucheBleu from "../assets/icons/sweetyx-blanc.png";
 import iconPelucheRose from "../assets/icons/sweetyx-rose.png";
 import iconPelucheMarron from "../assets/icons/sweetyx-marron.png";
 

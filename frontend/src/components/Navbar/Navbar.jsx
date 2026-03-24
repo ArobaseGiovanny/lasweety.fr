@@ -6,7 +6,7 @@ import logo from "../../assets/icons/logo.png";
 import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 
-function Navbar({ onCartClick }) {
+function Navbar({ onCartClick, showCart = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { cart } = useCart();
@@ -37,9 +37,13 @@ function Navbar({ onCartClick }) {
       </Link>
 
       <div className="navbar__actions">
-        <IoBagOutline className="navbar__icon-cart" onClick={onCartClick} />
-        {cartCount > 0 && (
-          <span className="navbar__cart-badge">{cartCount}</span>
+        {showCart && (
+          <>
+            <IoBagOutline className="navbar__icon-cart" onClick={onCartClick} />
+            {cartCount > 0 && (
+              <span className="navbar__cart-badge">{cartCount}</span>
+            )}
+          </>
         )}
         <RiMenu5Line
           className="navbar__icon-menu"
@@ -54,6 +58,9 @@ function Navbar({ onCartClick }) {
         <ul>
           <li>
             <Link to="/" onClick={() => setIsOpen(false)}>Accueil</Link>
+          </li>
+          <li>
+            <Link to="/peluches" onClick={() => setIsOpen(false)}>Nos peluches</Link>
           </li>
           <li>
             <button
