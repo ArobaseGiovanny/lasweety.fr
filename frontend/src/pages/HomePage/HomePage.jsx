@@ -25,7 +25,6 @@ const PLUSH_IMGS = [
 const MEMBERS = [
   {
     name: "La.sweety",
-    label: "Principal",
     socials: [
       { icon: FaYoutube,       label: "@La.Sweety",      href: "https://www.youtube.com/@La.Sweety",           color: "#FF0000", hover: "#FF0000" },
       { icon: FaYoutube,       label: "@lasweettv",      href: "https://www.youtube.com/@lasweettv",           color: "#FF0000", hover: "#FF0000" },
@@ -280,11 +279,11 @@ function HomePage() {
           modules={[EffectCards]}
           className="homePage__reseaux-swiper"
         >
-          {MEMBERS.map(({ name, label, socials }) => (
+          {MEMBERS.map(({ name, socials }) => (
             <SwiperSlide key={name} className="homePage__reseaux-card">
               <div className="homePage__reseaux-card-header">
                 <span className="homePage__reseaux-card-name">{name}</span>
-                {label && <span className="homePage__reseaux-card-label">{label}</span>}
+
               </div>
               <div className="homePage__reseaux-card-links">
                 {socials.map((social) => {
@@ -307,11 +306,11 @@ function HomePage() {
 
         {/* Desktop : toutes les cartes côte à côte */}
         <div className="homePage__reseaux-grid">
-          {MEMBERS.map(({ name, label, socials }) => (
+          {MEMBERS.map(({ name, socials }) => (
             <div key={name} className="homePage__reseaux-card">
               <div className="homePage__reseaux-card-header">
                 <span className="homePage__reseaux-card-name">{name}</span>
-                {label && <span className="homePage__reseaux-card-label">{label}</span>}
+
               </div>
               <div className="homePage__reseaux-card-links">
                 {socials.map((social) => {

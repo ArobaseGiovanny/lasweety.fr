@@ -528,12 +528,12 @@ $breakpoint-desktop: 900px;
     background: #f9f9f9;
     text-align: center;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
 
     &::before {
       content: '';
       position: absolute;
-      top: -4px;
+      top: 0;
       left: 0;
       right: 0;
       height: 4px;
@@ -636,6 +636,17 @@ $breakpoint-desktop: 900px;
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
+
+    @media (max-width: #{$breakpoint-desktop - 1px}) {
+      flex-direction: column;
+      align-items: stretch;
+      width: 80%;
+      margin: 0 auto;
+
+      .homePage__reseaux-link {
+        justify-content: center;
+      }
+    }
   }
 
   &__reseaux-link {
