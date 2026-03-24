@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { FiChevronDown, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaYoutube, FaInstagram, FaTiktok, FaSnapchatGhost } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Pagination, EffectCards } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import "swiper/css/effect-cards";
 import "./homePage.scss";
 
 import iconOrange from "../../assets/icons/sweetyx-orange.png";
@@ -26,29 +27,29 @@ const MEMBERS = [
     name: "La.sweety",
     label: "Principal",
     socials: [
-      { icon: FaYoutube,       label: "YouTube",   href: "https://www.youtube.com/@La.Sweety/", color: "#FF0000", hover: "#FF0000" },
-      { icon: FaYoutube,       label: "YouTube 2", href: "#",                                   color: "#FF0000", hover: "#FF0000" },
-      { icon: FaInstagram,     label: "Instagram", href: "#",                                   color: "#E1306C", hover: "#E1306C" },
-      { icon: FaTiktok,        label: "TikTok",    href: "#",                                   color: "#010101", hover: "#010101" },
-      { icon: FaSnapchatGhost, label: "Snapchat",  href: "#",                                   color: "#FFCC00", hover: "#FFCC00" },
+      { icon: FaYoutube,       label: "@La.Sweety",      href: "https://www.youtube.com/@La.Sweety",           color: "#FF0000", hover: "#FF0000" },
+      { icon: FaYoutube,       label: "@lasweettv",      href: "https://www.youtube.com/@lasweettv",           color: "#FF0000", hover: "#FF0000" },
+      { icon: FaInstagram,     label: "@sweetyfamily.yt", href: "https://www.instagram.com/sweetyfamily.yt/", color: "#E1306C", hover: "#E1306C" },
+      { icon: FaTiktok,        label: "@la.sweety",      href: "https://www.tiktok.com/@la.sweety",            color: "#010101", hover: "#010101" },
+      { icon: FaSnapchatGhost, label: "sweeyfamily.yt",  href: "https://www.snapchat.com/add/sweeyfamily.yt", color: "#FFCC00", hover: "#FFCC00" },
     ],
   },
   {
     name: "Diolinda",
     label: null,
     socials: [
-      { icon: FaYoutube,       label: "YouTube",   href: "#", color: "#FF0000", hover: "#FF0000" },
-      { icon: FaInstagram,     label: "Instagram", href: "#", color: "#E1306C", hover: "#E1306C" },
-      { icon: FaTiktok,        label: "TikTok",    href: "#", color: "#010101", hover: "#010101" },
-      { icon: FaSnapchatGhost, label: "Snapchat",  href: "#", color: "#FFCC00", hover: "#FFCC00" },
+      { icon: FaYoutube,       label: "@Diolindaa_",  href: "https://www.youtube.com/@Diolindaa_",      color: "#FF0000", hover: "#FF0000" },
+      { icon: FaInstagram,     label: "@diolinda_",   href: "https://www.instagram.com/diolinda_",      color: "#E1306C", hover: "#E1306C" },
+      { icon: FaTiktok,        label: "@diolindaa_",  href: "https://www.tiktok.com/@diolindaa_",       color: "#010101", hover: "#010101" },
+      { icon: FaSnapchatGhost, label: "diolindaa_d",  href: "https://www.snapchat.com/add/diolindaa_d", color: "#FFCC00", hover: "#FFCC00" },
     ],
   },
   {
     name: "Lilow",
     label: null,
     socials: [
-      { icon: FaYoutube,   label: "YouTube",   href: "#", color: "#FF0000", hover: "#FF0000" },
-      { icon: FaInstagram, label: "Instagram", href: "#", color: "#E1306C", hover: "#E1306C" },
+      { icon: FaYoutube,   label: "@Lilowtresor",  href: "https://www.youtube.com/@Lilowtresor/videos", color: "#FF0000", hover: "#FF0000" },
+      { icon: FaInstagram, label: "@lilow_tresor", href: "https://www.instagram.com/lilow_tresor",      color: "#E1306C", hover: "#E1306C" },
     ],
   },
 ];
@@ -259,6 +260,39 @@ function HomePage() {
       <section className="homePage__reseaux">
         <h2 className="homePage__reseaux-title">Nos réseaux</h2>
 
+        {/* Mobile : slider empilé */}
+        <Swiper
+          effect="cards"
+          grabCursor={true}
+          loop={true}
+          modules={[EffectCards]}
+          className="homePage__reseaux-swiper"
+        >
+          {MEMBERS.map(({ name, label, socials }) => (
+            <SwiperSlide key={name} className="homePage__reseaux-card">
+              <div className="homePage__reseaux-card-header">
+                <span className="homePage__reseaux-card-name">{name}</span>
+                {label && <span className="homePage__reseaux-card-label">{label}</span>}
+              </div>
+              <div className="homePage__reseaux-card-links">
+                {socials.map((social) => {
+                  const SocialIcon = social.icon;
+                  return (
+                    <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer"
+                      className="homePage__reseaux-link"
+                      style={{ "--brand": social.color, "--brand-bg": `${social.color}18` }}
+                    >
+                      <SocialIcon style={{ color: social.color }} />
+                      <span>{social.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+        {/* Desktop : toutes les cartes côte à côte */}
         <div className="homePage__reseaux-grid">
           {MEMBERS.map(({ name, label, socials }) => (
             <div key={name} className="homePage__reseaux-card">
@@ -270,11 +304,7 @@ function HomePage() {
                 {socials.map((social) => {
                   const SocialIcon = social.icon;
                   return (
-                    <a
-                      key={social.label}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer"
                       className="homePage__reseaux-link"
                       style={{ "--brand": social.color, "--brand-bg": `${social.color}18` }}
                     >

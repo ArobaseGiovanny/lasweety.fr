@@ -524,7 +524,7 @@ $breakpoint-desktop: 900px;
 
   // ===== RÉSEAUX =====
   &__reseaux {
-    padding: 60px 20px 70px;
+    padding: 60px 8px 70px;
     background: #f9f9f9;
     text-align: center;
     position: relative;
@@ -554,33 +554,52 @@ $breakpoint-desktop: 900px;
     color: #1a1a1a;
   }
 
-  &__reseaux-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 24px;
-    max-width: 1000px;
+  &__reseaux-swiper {
+    width: 300px;
+    max-width: 90vw;
     margin: 0 auto;
+
+    @media (min-width: $breakpoint-desktop) {
+      display: none;
+    }
+  }
+
+  &__reseaux-grid {
+    display: none;
+
+    @media (min-width: $breakpoint-desktop) {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 8px;
+
+      .homePage__reseaux-card {
+        flex: 1;
+        max-width: 340px;
+        height: auto !important;
+      }
+    }
   }
 
   &__reseaux-card {
-    background: white;
     border-radius: 20px;
-    padding: 24px 28px;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+    padding: 28px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 16px;
-    min-width: 220px;
-    flex: 1;
-    max-width: 300px;
+    height: 320px !important;
     border: 2px solid transparent;
     background:
       linear-gradient(white, white) padding-box,
       linear-gradient(90deg, #ff0000, #ff7700, #ffee00, #00cc44, #0088ff, #8800ff, #ff00cc, #ff0000) border-box;
     background-size: auto, 300% 100%;
     animation: rainbowMove 4s linear infinite;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
   }
 
   &__reseaux-card-header {
