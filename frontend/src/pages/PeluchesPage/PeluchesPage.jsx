@@ -18,7 +18,6 @@ function PeluchesPage() {
 
   const handleChangeColor = (color) => {
     const colorToId = {
-      orange: 101,
       bleu: 102,
       rose: 103,
       marron: 104,

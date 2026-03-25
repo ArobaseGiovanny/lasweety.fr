@@ -140,11 +140,10 @@ $breakpoint-desktop: 900px;
     animation: imageFade 3s infinite;
   }
 
-  // Décalages : cycle 3s, 0.75s entre chaque
-  &__hero-img--orange { animation-delay: -0.19s; }
-  &__hero-img--rose   { animation-delay:  0.56s; }
-  &__hero-img--marron { animation-delay:  1.31s; }
-  &__hero-img--blanc  { animation-delay:  2.06s; }
+  // Décalages : espacement 1s, overlap 0.2s entre chaque image
+  &__hero-img--rose   { animation-delay: -0.3s; }
+  &__hero-img--marron { animation-delay:  0.7s; }
+  &__hero-img--blanc  { animation-delay:  1.7s; }
 
   &__hero-imgs--desktop &__hero-img {
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.12));
@@ -210,13 +209,13 @@ $breakpoint-desktop: 900px;
     to   { transform: translate(-50%, -50%) rotate(360deg); }
   }
 
-  // Crossfade fluide : fade-in 0.5s, maintien 2s, fade-out 0.5s, invisible 5s
+  // Crossfade fluide pour 3 images : chaque image visible 50% du cycle, overlap 0.2s
   @keyframes imageFade {
-    0%     { opacity: 0; }
-    6.25%  { opacity: 1; }
-    31.25% { opacity: 1; }
-    37.5%  { opacity: 0; }
-    100%   { opacity: 0; }
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    40%  { opacity: 1; }
+    50%  { opacity: 0; }
+    100% { opacity: 0; }
   }
 
   @keyframes gradientShift {

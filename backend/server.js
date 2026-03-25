@@ -9,6 +9,7 @@ import checkoutRoutes from "./routes/checkout.js";
 import chronopostRouter from "./routes/chronopost.js";
 import productsDetailsRouter from "./routes/productsDetails.js";
 import youtubeRouter from "./routes/youtube.js";
+import tiktokRouter from "./routes/tiktok.js";
 
 // Charge le bon .env selon APP_ENV (défaut: test)
 const appEnv = process.env.APP_ENV || "test";
@@ -72,6 +73,7 @@ app.use("/api/checkout", checkoutRoutes);
 app.use("/api/chronopost", chronopostRouter);
 app.use("/api/products", productsDetailsRouter);
 app.use("/api/youtube", youtubeRouter);
+app.use("/api/tiktok", tiktokRouter);
 
 
 // Error handler

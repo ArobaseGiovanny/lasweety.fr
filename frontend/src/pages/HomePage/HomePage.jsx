@@ -15,14 +15,12 @@ import "swiper/css/pagination";
 import "swiper/css/effect-cards";
 import "./homePage.scss";
 
-import iconOrange from "../../assets/icons/sweetyx-orange.png";
 import iconBlanc from "../../assets/icons/sweetyx-blanc.png";
 import iconRose from "../../assets/icons/sweetyx-rose.png";
 import iconMarron from "../../assets/icons/sweetyx-marron.png";
 import SOCIAL_STATS from "../../data/socialStats";
 
 const PLUSH_IMGS = [
-  { src: iconOrange, cls: "orange" },
   { src: iconRose, cls: "rose" },
   { src: iconMarron, cls: "marron" },
   { src: iconBlanc, cls: "blanc" },

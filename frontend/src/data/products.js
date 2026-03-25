@@ -1,14 +1,6 @@
-import iconPelucheOrange from "../assets/icons/sweetyx-orange.png";
 import iconPelucheBleu from "../assets/icons/sweetyx-blanc.png";
 import iconPelucheRose from "../assets/icons/sweetyx-rose.png";
 import iconPelucheMarron from "../assets/icons/sweetyx-marron.png";
-
-import pelucheOrangeImg1 from "../assets/peluches/orange/img-1.png"
-import pelucheOrangeImg2 from "../assets/peluches/orange/img-2.png"
-import pelucheOrangeImg3 from "../assets/peluches/orange/img-3.png"
-import pelucheOrangeDio from "../assets/peluches/orange/dio.png"
-import pelucheOrangeLolo from "../assets/peluches/orange/lolo.png"
-import pelucheOrangeDada from "../assets/peluches/orange/dada.png"
 
 import pelucheBleuImg1 from "../assets/peluches/blue/img-1.png"
 import pelucheBleuImg2 from "../assets/peluches/blue/img-2.png"
@@ -33,41 +25,7 @@ import pelucheRoseDio from "../assets/peluches/pink/dio.png"
 import pelucheRoseLolo from "../assets/peluches/pink/lolo.png"
 import pelucheRoseDada from "../assets/peluches/pink/dada.png"
 
-
-
-import pelucheVueOverall from "../assets/peluches/orange/overall-1.png"
-
 const products = {
-  101: {
-    id: 101,
-    name: "Sweetyx Orange",
-    color: "orange",
-    price: 34.99,
-    description: "Un ourson orange qui fait fondre les cœurs 💙",
-    icon: [{src: iconPelucheOrange}],
-    images: [
-      { src: pelucheOrangeImg1, alt: "Peluche Sweetyx de couleur orange vue de l'avant" },
-      { src: pelucheOrangeImg2, alt: "Peluche Sweetyx de couleur orange vue de l'arrière en zoom" },
-      { src: pelucheOrangeImg3, alt: "Peluche Sweetyx de couleur orange vue de l'arrière" },
-      { src: pelucheOrangeDada, alt: "Peluche Sweetyx de couleur orange dans les mains de Laurinda" },
-      { src: pelucheOrangeDio, alt: "Peluche Sweetyx de couleur orange dans les mains de Diolinda" },
-      { src: pelucheOrangeLolo, alt: "Peluche Sweetyx de couleur orange dans les mains de Lilow" },
-      { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur orange, bleue, rose et marron" },
-
-    ],
-    specs: [
-      { label: "Type", value: "Jouet – Peluche" },       
-      { label: "Couleur", value: "Orange" },                              
-      { label: "Matière principale", value: "Polyester" },
-      { label: "Dimensions", value: "25 cm de hauteur" },                     
-      { label: "Âge", value: "3 ans et +" },                 
-      { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
-      { label: "Disponibilité", value: "En stock" },                    
-      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
-      { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
-      { label: "Vendeur", value: "La Sweety" },       
-]
-  },
   102: {
     id: 102,
     name: "Sweetyx Bleu",
@@ -83,20 +41,19 @@ const products = {
       { src: pelucheBleuDada, alt: "Peluche Sweetyx de couleur bleu dans les mains de Laurinda" },
       { src: pelucheBleuDio, alt: "Peluche Sweetyx de couleur bleu dans les mains de Diolinda" },
       { src: pelucheBleuLolo, alt: "Peluche Sweetyx de couleur bleu dans les mains de Lilow" },
-      { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur bleu, bleue, rose et marron" },
     ],
     specs: [
-      { label: "Type", value: "Jouet – Peluche" },       
-      { label: "Couleur", value: "Bleu" },                              
+      { label: "Type", value: "Jouet – Peluche" },
+      { label: "Couleur", value: "Bleu" },
       { label: "Matière principale", value: "Polyester" },
-      { label: "Dimensions", value: "25 cm de hauteur" },                     
-      { label: "Âge", value: "3 ans et +" },                 
+      { label: "Dimensions", value: "25 cm de hauteur" },
+      { label: "Âge", value: "3 ans et +" },
       { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
-      { label: "Disponibilité", value: "En stock" },                    
-      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
+      { label: "Disponibilité", value: "En stock" },
+      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },
       { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
-      { label: "Vendeur", value: "La Sweety" },       
-]
+      { label: "Vendeur", value: "La Sweety" },
+    ]
   },
   103: {
     id: 103,
@@ -112,19 +69,18 @@ const products = {
       { src: pelucheRoseDada, alt: "Peluche Sweetyx de couleur Rose dans les mains de Laurinda" },
       { src: pelucheRoseDio, alt: "Peluche Sweetyx de couleur Rose dans les mains de Diolinda" },
       { src: pelucheRoseLolo, alt: "Peluche Sweetyx de couleur Rose dans les mains de Lilow" },
-      { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur orange, bleue, rose et marron" },
     ],
     specs: [
-      { label: "Type", value: "Jouet – Peluche" },       
-      { label: "Couleur", value: "Rose" },                              
+      { label: "Type", value: "Jouet – Peluche" },
+      { label: "Couleur", value: "Rose" },
       { label: "Matière principale", value: "Polyester" },
-      { label: "Dimensions", value: "25 cm de hauteur" },                     
-      { label: "Âge", value: "3 ans et +" },                 
+      { label: "Dimensions", value: "25 cm de hauteur" },
+      { label: "Âge", value: "3 ans et +" },
       { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
-      { label: "Disponibilité", value: "En stock" },                    
-      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
+      { label: "Disponibilité", value: "En stock" },
+      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },
       { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
-      { label: "Vendeur", value: "La Sweety" },       
+      { label: "Vendeur", value: "La Sweety" },
     ]
   },
   104: {
@@ -142,20 +98,19 @@ const products = {
       { src: pelucheMarronDada, alt: "Peluche Sweetyx de couleur marron dans les mains de Laurinda" },
       { src: pelucheMarronDio, alt: "Peluche Sweetyx de couleur marron dans les mains de Diolinda" },
       { src: pelucheMarronLolo, alt: "Peluche Sweetyx de couleur marron dans les mains de Lilow" },
-      { src: pelucheVueOverall, alt: "4 peluches Sweetyx de couleur bleu, bleue, rose et marron" },
     ],
-      specs: [
-    { label: "Type", value: "Jouet – Peluche" },       
-    { label: "Couleur", value: "Marron" },                              
-    { label: "Matière principale", value: "Polyester" },
-    { label: "Dimensions", value: "25 cm de hauteur" },                     
-    { label: "Âge", value: "3 ans et +" },                 
-    { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
-    { label: "Disponibilité", value: "En stock" },                    
-    { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },                 
-    { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
-    { label: "Vendeur", value: "La Sweety" },       
-]
+    specs: [
+      { label: "Type", value: "Jouet – Peluche" },
+      { label: "Couleur", value: "Marron" },
+      { label: "Matière principale", value: "Polyester" },
+      { label: "Dimensions", value: "25 cm de hauteur" },
+      { label: "Âge", value: "3 ans et +" },
+      { label: "Conformité", value: "Marquage CE – EN71, EN71-1, EN71-2" },
+      { label: "Disponibilité", value: "En stock" },
+      { label: "Livraison", value: "2–5 jours ouvrés via Chronopost" },
+      { label: "Droit de rétractation", value: "14 jours après réception (voir conditions)" },
+      { label: "Vendeur", value: "La Sweety" },
+    ]
   },
 };
 
