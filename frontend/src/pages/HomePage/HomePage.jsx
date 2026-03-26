@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { usePageTransition } from "../../context/TransitionContext";
 import { FiChevronDown, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import {
   FaYoutube,
@@ -135,6 +135,7 @@ const PERKS = [
 ];
 
 function HomePage() {
+  const { navigateTo } = usePageTransition();
   const [videos, setVideos] = useState([]);
   const [videosLoading, setVideosLoading] = useState(true);
   const [shorts, setShorts] = useState([]);
@@ -234,8 +235,8 @@ function HomePage() {
           </p>
 
           {/* Images empilées — mobile */}
-          <Link
-            to="/peluches"
+          <button
+            onClick={() => navigateTo("/peluches")}
             className="homePage__hero-imgs homePage__hero-imgs--mobile"
           >
             {PLUSH_IMGS.map(({ src, cls }) => (
@@ -246,11 +247,11 @@ function HomePage() {
                 className={`homePage__hero-img homePage__hero-img--${cls}`}
               />
             ))}
-          </Link>
+          </button>
 
-          <Link to="/peluches" className="homePage__hero-cta">
+          <button onClick={() => navigateTo("/peluches")} className="homePage__hero-cta">
             Voir nos peluches ✨
-          </Link>
+          </button>
 
           <div className="homePage__hero-perks">
             {PERKS.map(({ icon, label }) => (
@@ -263,8 +264,8 @@ function HomePage() {
 
         {/* Colonne droite — images empilées desktop */}
         <div className="homePage__hero-right">
-          <Link
-            to="/peluches"
+          <button
+            onClick={() => navigateTo("/peluches")}
             className="homePage__hero-imgs homePage__hero-imgs--desktop"
           >
             {PLUSH_IMGS.map(({ src, cls }) => (
@@ -275,7 +276,7 @@ function HomePage() {
                 className={`homePage__hero-img homePage__hero-img--${cls}`}
               />
             ))}
-          </Link>
+          </button>
         </div>
       </section>
 

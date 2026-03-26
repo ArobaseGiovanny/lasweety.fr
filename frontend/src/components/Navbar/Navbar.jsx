@@ -3,14 +3,17 @@ import { RiMenu5Line } from "react-icons/ri";
 import { IoBagOutline } from "react-icons/io5";
 import { useState, useRef, useEffect } from "react";
 import logo from "../../assets/icons/logo.png";
-import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import { usePageTransition } from "../../context/TransitionContext";
 
 function Navbar({ onCartClick, showCart = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { cart } = useCart();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const { navigateTo } = usePageTransition();
+
+  const go = (path) => { setIsOpen(false); navigateTo(path); };
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -32,9 +35,9 @@ function Navbar({ onCartClick, showCart = true }) {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar__logo-link">
+      <button className="navbar__logo-link" onClick={() => go("/")}>
         <img className="navbar__logo" src={logo} alt="Logo Lasweety" />
-      </Link>
+      </button>
 
       <div className="navbar__actions">
         {showCart && (
@@ -57,27 +60,24 @@ function Navbar({ onCartClick, showCart = true }) {
       >
         <ul>
           <li>
-            <Link to="/" onClick={() => setIsOpen(false)}>Accueil</Link>
+            <button onClick={() => go("/")}>Accueil</button>
           </li>
           <li>
-            <Link to="/peluches" onClick={() => setIsOpen(false)}>Nos peluches</Link>
+            <button onClick={() => go("/peluches")}>Nos peluches</button>
           </li>
           <li>
             <button
               className="navbar__menu-cart"
-              onClick={() => {
-                setIsOpen(false);
-                onCartClick();
-              }}
+              onClick={() => { setIsOpen(false); onCartClick(); }}
             >
               Panier
             </button>
           </li>
           <li>
-            <Link to="/contact" onClick={() => setIsOpen(false)}>Suivez-nous</Link>
+            <button onClick={() => go("/contact")}>Suivez-nous</button>
           </li>
           <li>
-            <Link to="/about" onClick={() => setIsOpen(false)}>Mentions légales</Link>
+            <button onClick={() => go("/about")}>Mentions légales</button>
           </li>
         </ul>
 

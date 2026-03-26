@@ -7,27 +7,23 @@
 }
 
 body {
-    background: url("../assets/background/background_mobile.png") no-repeat center center;
-    background-size: cover;
-    background-attachment: fixed;
+    background: white;
     width: 100%;
     min-height: 100vh;
     overflow: hidden;
 }
 
 body.scrollable {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 body.white-bg {
     background: white;
 }
 
-@media (min-width: 1200px) {
-    body {
-        background: url("../assets/background/background.png") no-repeat center center;
-        background-size: cover;
-        background-attachment: fixed;
-        min-height: 100vh;
-    }
+@keyframes rainbowMove {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
 }
+
