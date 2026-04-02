@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import AdminLogin from "./pages/LoginAdmin/AdminLogin";
 import About from "./pages/About/about";
+import ContactPage from "./pages/ContactPage/ContactPage";
 import products from "./data/products";
 import { TransitionProvider } from "./context/TransitionContext";
 
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/peluches" element={<PeluchesPage />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Login Admin */}
         <Route

@@ -1,0 +1,146 @@
+$font: "Poppins", system-ui, sans-serif;
+$rainbow: linear-gradient(90deg, #ff0000, #ff7700, #ffee00, #00cc44, #0088ff, #8800ff, #ff00cc, #ff0000);
+
+.contactPage {
+  min-height: 100svh;
+  padding: 100px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  // ── Header ────────────────────────────────────────────────────────────
+  &__header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+
+  &__title {
+    font-family: "Cherry Bomb One", system-ui;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    line-height: 1;
+    background: $rainbow;
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbowMove 4s linear infinite;
+    margin-bottom: 12px;
+  }
+
+  &__subtitle {
+    font-family: $font;
+    font-size: 0.95rem;
+    color: #aaa;
+    font-weight: 400;
+  }
+
+  // ── Grid ──────────────────────────────────────────────────────────────
+  &__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  // ── Card ──────────────────────────────────────────────────────────────
+  &__card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px 24px 20px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+  }
+
+  &__card-name {
+    font-family: $font;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+  }
+
+  // ── Links ─────────────────────────────────────────────────────────────
+  &__card-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+
+    &:hover {
+      background: white;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transform: translateX(4px);
+    }
+  }
+
+  &__link-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+
+    svg { font-size: 1.1rem; }
+  }
+
+  &__link-label {
+    font-family: $font;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    flex: 1;
+  }
+
+  &__link-count {
+    font-family: $font;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: white;
+    background: $rainbow;
+    background-size: 300% 100%;
+    animation: rainbowMove 4s linear infinite;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+}
+
+// ── Desktop ───────────────────────────────────────────────────────────────
+
+@media (min-width: 700px) {
+  .contactPage {
+    padding-top: 120px;
+
+    &__grid {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1000px;
+      gap: 28px;
+    }
+
+    &__card {
+      flex: 1 1 280px;
+      max-width: 340px;
+    }
+  }
+}

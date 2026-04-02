@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(grep -E \"\\\\.\\(js|json\\)$\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(node -e ':*)"
     ]
   }
 }

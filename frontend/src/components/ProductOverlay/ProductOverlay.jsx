@@ -4,9 +4,11 @@ import { createPortal } from "react-dom";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { FiInfo } from "react-icons/fi";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { EffectCards } from "swiper/modules";
+import { EffectCards, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-cards";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 import { useCart } from "../../context/CartContext";
 
 function totalQty(list) {
@@ -49,7 +51,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
     const controller = new AbortController();
     setStockLoading(true);
     setStockError(null);
-    fetch("https://api.lasweety.com/api/products", { signal: controller.signal })
+    fetch(`${import.meta.env.VITE_API_URL}/products`, { signal: controller.signal })
       .then(res => { if (!res.ok) throw new Error(); return res.json(); })
       .then(list => {
         const match = Array.isArray(list) ? list.find(p => String(p.id) === String(product.id)) : null;
@@ -166,9 +168,14 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
   };
 
   return (
+    <>
+    {isOpen && createPortal(
+      <div className="productOverlay__backdrop" onClick={onClose} />,
+      document.body
+    )}
     <section
       className={`productOverlay ${product ? product.color : ""} ${isOpen ? "isOpen" : ""}`}
-      style={{ transform: isOpen ? `translateY(${translateY}px)` : undefined }}
+      style={{ transform: (isOpen && translateY > 0) ? `translateY(${translateY}px)` : undefined }}
     >
       {/* Handle swipe */}
       <div
@@ -193,7 +200,9 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
             key={product.id}
             effect="cards"
             grabCursor={true}
-            modules={[EffectCards]}
+            modules={[EffectCards, Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
             className="productOverlay__swiper"
           >
             {images.map((img, i) => (
@@ -333,6 +342,7 @@ function ProductOverlay({ isOpen, onClose, product, onChangeColor }) {
         <div style={{ flex: 1 }} />
       )}
     </section>
+    </>
   );
 }
 

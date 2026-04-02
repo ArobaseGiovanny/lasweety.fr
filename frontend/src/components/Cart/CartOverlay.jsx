@@ -3,6 +3,7 @@ import { useCart } from "../../context/CartContext";
 import products from "../../data/products";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const SENDCLOUD_PUBLIC_KEY = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
@@ -208,9 +209,13 @@ function CartOverlay({ isOpen, onClose }) {
 
   return (
     <>
+      {isOpen && createPortal(
+        <div className="cartOverlay__backdrop" onClick={onClose} />,
+        document.body
+      )}
       <section
         className={`cartOverlay ${isOpen ? "isOpen" : ""}`}
-        style={{ transform: isOpen ? `translateY(${translateY}px)` : undefined }}
+        style={{ transform: (isOpen && translateY > 0) ? `translateY(${translateY}px)` : undefined }}
       >
         {/* scroll-hint mobile */}
         <div
@@ -227,7 +232,7 @@ function CartOverlay({ isOpen, onClose }) {
           <IoCloseCircleSharp onClick={onClose} />
         </div>
 
-        <h2 className="cartOverlay__title">Mon Panier</h2>
+        <h2 className="cartOverlay__title">Panier</h2>
 
         {/* Bannière d'erreur UI */}
         {uiError && (
@@ -257,7 +262,7 @@ function CartOverlay({ isOpen, onClose }) {
                         <p>Prix unitaire : {item.price.toFixed(2)} €</p>
                       </div>
                       <div className="cartOverlay__subtotal">
-                        {(item.price * item.quantity).toFixed(2)} €
+                        {(item.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
 
@@ -286,7 +291,7 @@ function CartOverlay({ isOpen, onClose }) {
 
         {cart.length > 0 && (
           <div className="cartOverlay__footer">
-            <p>Total : {totalPrice.toFixed(2)} €</p>
+            <p>{totalPrice.toFixed(2)}</p>
             <button
               className="cartOverlay__checkout"
               onClick={handleOrderClick}
@@ -301,37 +306,12 @@ function CartOverlay({ isOpen, onClose }) {
 
       {/* Popup centré : choix du mode de livraison */}
       {showDeliveryChoice && (
-        <div
-          className="deliveryModal"
-          style={{
-            position: "fixed",
-            inset: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            className="deliveryModal__content"
-            style={{
-              background: "white",
-              padding: "2rem",
-              borderRadius: "12px",
-              width: "90%",
-              maxWidth: "420px",
-              textAlign: "center",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            }}
-          >
-            <h3 style={{ marginBottom: "1.25rem" }}>Choisissez votre mode de livraison</h3>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div className="deliveryModal">
+          <div className="deliveryModal__content">
+            <h3>Mode de livraison</h3>
+            <div className="deliveryModal__options">
               <button
-                className="cartOverlay__zipcode"
+                className="deliveryModal__btn deliveryModal__btn--primary"
                 onClick={() => {
                   setDeliveryMode("home");
                   setPickupPoint(null);
@@ -341,15 +321,8 @@ function CartOverlay({ isOpen, onClose }) {
               >
                 🏠 Livraison à domicile
               </button>
-
               <button
-                style={{
-                  padding: "0.9rem",
-                  borderRadius: "10px",
-                  border: "1px solid #111",
-                  backgroundColor: "white",
-                  cursor: "pointer",
-                }}
+                className="deliveryModal__btn"
                 onClick={() => {
                   setDeliveryMode("pickup");
                   setShowDeliveryChoice(false);
@@ -359,17 +332,7 @@ function CartOverlay({ isOpen, onClose }) {
                 📦 Point relais Mondial Relay
               </button>
             </div>
-
-            <button
-              style={{
-                marginTop: "1rem",
-                border: "none",
-                background: "transparent",
-                color: "#666",
-                cursor: "pointer",
-              }}
-              onClick={() => setShowDeliveryChoice(false)}
-            >
+            <button className="deliveryModal__cancel" onClick={() => setShowDeliveryChoice(false)}>
               Annuler
             </button>
           </div>
@@ -378,89 +341,28 @@ function CartOverlay({ isOpen, onClose }) {
 
       {/* Popup "Code postal" avant d'ouvrir la carte */}
       {showPostalModal && (
-        <div
-          className="postalModal"
-          style={{
-            position: "fixed",
-            inset: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-          }}
-        >
-          <div
-            className="postalModal__content"
-            style={{
-              background: "white",
-              padding: "1.5rem",
-              borderRadius: "12px",
-              width: "92%",
-              maxWidth: "420px",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-              textAlign: "center",
-            }}
-          >
-            <h3>Code postal</h3>
-            <p style={{ marginTop: 6, color: "#666" }}>
-              Entre ton code postal pour afficher la carte des points relais de ta ville
-            </p>
-
+        <div className="postalModal">
+          <div className="postalModal__content">
+            <h3>Point relais</h3>
+            <p>Entre ton code postal pour afficher les points relais près de chez toi</p>
             <input
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={5}
-              placeholder="Code postal (ex. 75001)"
+              placeholder="Ex. 75001"
               value={postalCode}
+              className={`postalModal__input${postalError ? " postalModal__input--error" : ""}`}
               onChange={(e) => {
                 setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5));
                 setPostalError("");
               }}
-              style={{
-                width: "100%",
-                marginTop: 12,
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid " + (postalError ? "crimson" : "#ddd"),
-                fontSize: 16,
-                textAlign: "center",
-                letterSpacing: 1,
-              }}
             />
-
-            {postalError && <p style={{ color: "crimson", marginTop: 8 }}>{postalError}</p>}
-
-            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-              <button
-                onClick={continueWithPostal}
-                style={{
-                  flex: 1,
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#111",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Continuer
-              </button>
-            </div>
-
-            <button
-              style={{
-                marginTop: 10,
-                border: "none",
-                background: "transparent",
-                color: "#666",
-                cursor: "pointer",
-              }}
-              onClick={() => setShowPostalModal(false)}
-            >
+            {postalError && <p className="postalModal__error">{postalError}</p>}
+            <button className="postalModal__submit" onClick={continueWithPostal}>
+              Continuer
+            </button>
+            <button className="postalModal__cancel" onClick={() => setShowPostalModal(false)}>
               Annuler
             </button>
           </div>

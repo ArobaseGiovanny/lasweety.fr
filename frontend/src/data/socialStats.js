@@ -17,13 +17,13 @@ const SOCIAL_STATS = {
   lasweety_yt_main:    "+2,6M",  // @La.Sweety
   lasweety_yt_second:  "+181K",  // @lasweettv
   lasweety_instagram:  "+200k",     // @sweetyfamily.yt
-  lasweety_tiktok:     null,     // @la.sweety
+  lasweety_tiktok:     "+1,8M",  // @la.sweety
   lasweety_snapchat:   "+590k",     // sweeyfamily.yt
 
   // ── Diolinda ───────────────────────────────────────────────
   diolinda_yt:         "+948K",  // @Diolindaa_
   diolinda_instagram:  "+200k",     // @diolinda_
-  diolinda_tiktok:     null,     // @diolindaa_
+  diolinda_tiktok:     "+700K",  // @diolindaa_
   diolinda_snapchat:   null,     // diolindaa_d
 
   // ── Lilow ──────────────────────────────────────────────────
